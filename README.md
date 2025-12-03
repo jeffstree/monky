@@ -2,8 +2,8 @@
 
 ## Roster
 PM: Jiefeng Ou
-Devo 2: Wesley Leon
-Devo 3: Alexandru Cimpoiesu
+Devo 1: Wesley Leon
+Devo 2: Alexandru Cimpoiesu
 
 ## Description
 A wordle-style game where you have to match Pokemon, cat, and bird trivia.
