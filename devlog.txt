@@ -3,9 +3,13 @@ jiefengO -- 2025-12-02 1:30
 
 jiefengO -- 2025-12-03 5:50
   - Added revised design doc
-  
+
 INITIAL DD REVIEW -- 2025-12-03 5:50
   - Added additional Tailwind usage justification
   - Added explanation for component map and site map
   - Added explanation for database map's lack of API data
   - Added extra info for each devo's tasks
+
+jiefengO -- 2025-12-03 10:55
+  - Added description and summary of project
+  - Added file structure
