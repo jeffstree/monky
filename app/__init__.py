@@ -3,7 +3,7 @@
 # SoftDev
 # P01: ArRESTed Development
 
-from flask import Flask, render_template, request
+from flask import *
 import sqlite3
 
 app = Flask(__name__)
@@ -20,11 +20,14 @@ def home():
 def login():
     username = request.form['username']
     password = request.form['password']
-    print(username, password)
+
     return render_template("login.html");
 
 @app.route("/register", methods=['GET','POST'])
 def register():
+    username = request.form['username']
+    password = request.form['password']
+    c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password));
     return render_template("register.html");
 
 
