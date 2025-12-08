@@ -3,7 +3,7 @@
 # SoftDev
 # P01: ArRESTed Development
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import sqlite3
 
 app = Flask(__name__)
@@ -13,8 +13,20 @@ db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
 
 @app.route("/")
-def hello_world():
+def home():
     return render_template("home.html")
+
+@app.route("/login", methods=['GET','POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    print(username, password)
+    return render_template("login.html");
+
+@app.route("/register", methods=['GET','POST'])
+def register():
+    return render_template("register.html");
+
 
 #==========================================================
 #SQLITE3 DATABASE LIES BENEATH HERE
