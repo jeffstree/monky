@@ -23,3 +23,6 @@ jiefengO -- 2025-12-05 10:55
 
 jiefengO -- 2025-12-08 10:59
   - Added login page & register page that only posts a username and password
+
+alexandruC -- 2025-12-08 6:42
+  - Added API key loading 

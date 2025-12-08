@@ -5,6 +5,7 @@
 
 from flask import *
 import sqlite3
+import os
 
 app = Flask(__name__)
 
@@ -29,6 +30,30 @@ def register():
     password = request.form['password']
     c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password));
     return render_template("register.html");
+#==========================================================
+#KEYLOADING LIES BENEATH HERE
+#==========================================================
+
+def key_load(key_name):
+    try:
+        key_path = os.path.join(os.path.dirname(__file__), "keys", f"key_{key_name}.txt")
+        with open (key_path, "r") as f:
+            text = f.read().strip()
+            if not text: 
+                print(f"File is empty for: {key_name}")
+                return None
+            print(f"Loaded key for: {key_name}")
+            return text
+    except Exception as exception:
+        print(f"Failed to load key for {key_name}: {exception}")
+        return None
+
+cat_key = key_load("TheCatAPI")
+nuthatch_key = key_load("NuthatchAPI")
+
+#==========================================================
+#KEYLOADING LIES ABOVE HERE
+#==========================================================
 
 
 #==========================================================
