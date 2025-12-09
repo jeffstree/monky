@@ -52,7 +52,6 @@ def register():
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
-
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
         session['username'] = username
         return redirect(url_for('home'))
