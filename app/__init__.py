@@ -8,6 +8,7 @@ import sqlite3
 import os
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
 DB_FILE="database.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
@@ -15,21 +16,48 @@ c = db.cursor()
 
 @app.route("/")
 def home():
-    return render_template("home.html")
+    if'username' in session:
+        return render_template("home.html", user = session['username'])
+    return render_template("home.html", user = "Guest")
 
 @app.route("/login", methods=['GET','POST'])
 def login():
-    username = request.form['username']
-    password = request.form['password']
+    #if already logged in
+    if 'username' in session:
+        return redirect(request.referrer)
 
-    return render_template("login.html");
+    #if info given
+    if request.method == "POST":
+        username = request.form['username']
+        password = request.form['password']
+
+        user = c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password)).fetchone()
+        if not user:
+            error = "Invalid username or password!"
+            return render_template('login.html', error=error)
+
+        session['username'] = username
+        db.commit()
+        return redirect(url_for('home'))
+
+    return render_template("login.html")
 
 @app.route("/register", methods=['GET','POST'])
 def register():
-    username = request.form['username']
-    password = request.form['password']
-    c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password));
-    return render_template("register.html");
+    #if already logged in
+    if 'username' in session:
+        return redirect(request.referrer)
+
+    #if info given
+    if request.method == "POST":
+        username = request.form['username']
+        password = request.form['password']
+
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+        session['username'] = username
+        return redirect(url_for('home'))
+
+    return render_template("register.html")
 #==========================================================
 #KEYLOADING LIES BENEATH HERE
 #==========================================================
@@ -39,7 +67,7 @@ def key_load(key_name):
         key_path = os.path.join(os.path.dirname(__file__), "keys", f"key_{key_name}.txt")
         with open (key_path, "r") as f:
             text = f.read().strip()
-            if not text: 
+            if not text:
                 print(f"File is empty for: {key_name}")
                 return None
             print(f"Loaded key for: {key_name}")
