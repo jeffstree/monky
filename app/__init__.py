@@ -58,6 +58,12 @@ def register():
         return redirect(url_for('home'))
 
     return render_template("register.html")
+
+@app.route("/logout", methods=['GET', 'POST'])
+def logout():
+    if 'username' in session:
+        session.pop('username')
+    return redirect(request.referrer)
 #==========================================================
 #KEYLOADING LIES BENEATH HERE
 #==========================================================
