@@ -164,8 +164,17 @@ CREATE TABLE IF NOT EXISTS poke_info (
     type_two TEXT,
     height INTEGER
     weight INTEGER
+    generation INTEGER,
 )""")
 # Height and Weight are divided by 10
+# Generation is returned as
+
+# name:"generation-iv"
+# url:"https://pokeapi.co/api/v2/generation/4/"
+
+# need to grab the generation number from the url.
+
+
 #==========================================================
 #SQLITE3 DATABASE LIES ABOVE HERE
 #==========================================================
