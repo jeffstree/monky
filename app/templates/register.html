@@ -21,6 +21,13 @@ Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
        </div>
      {% endif %}
 
+     {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+          {{message}}
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
      <form method="POST" action="{{ url_for('register') }}">
        <label>Username:</label><br>
        <input type="text" name="username" required><br><br>
