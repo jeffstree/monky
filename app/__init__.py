@@ -16,9 +16,15 @@ c = db.cursor()
 
 @app.route("/")
 def home():
-    if'username' in session:
-        return render_template("home.html", user = session['username'])
-    return render_template("home.html", user = "Guest")
+    if 'username' in session:
+        user = session['username']
+        #catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user)).fetchall()
+    else:
+        user = "Guest"
+        #catdata = None
+
+
+    return render_template("home.html", user = user, catdata = catdata)
 
 @app.route("/login", methods=['GET','POST'])
 def login():

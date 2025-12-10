@@ -36,3 +36,7 @@ alexandruC -- 2025-12-10 10:26
 
 alexandruC -- 2025-12-10 10:26
   - Added flashing to register gonna go actually maybe make dbs next
+
+jiefengO -- 2025-12-10 11:00
+  - Fixed bug with Register
+  - Began work on displaying user data in home
