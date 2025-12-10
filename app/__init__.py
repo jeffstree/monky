@@ -160,14 +160,12 @@ c.execute("""
 CREATE TABLE IF NOT EXISTS poke_info (
     id INTEGER PRIMARY KEY,
     name TEXT,
-    family TEXT,
-    order TEXT,
-    status TEXT,
-    wingspan_min INTEGER,
-    wingspan_max INTEGER,
-    length_min INTEGER,
-    length_max INTEGER,
+    type_one TEXT,
+    type_two TEXT,
+    height INTEGER
+    weight INTEGER
 )""")
+# Height and Weight are divided by 10
 #==========================================================
 #SQLITE3 DATABASE LIES ABOVE HERE
 #==========================================================
