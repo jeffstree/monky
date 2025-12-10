@@ -33,3 +33,6 @@ jiefengO -- 2025-12-09 10:55
 
 alexandruC -- 2025-12-10 10:26
   - Added flashing to login -- might add to other ones next
+
+alexandruC -- 2025-12-10 10:26
+  - Added flashing to register gonna go actually maybe make dbs next
