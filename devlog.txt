@@ -30,3 +30,6 @@ alexandruC -- 2025-12-08 6:42
 jiefengO -- 2025-12-09 10:55
   - Added working login, register, and logout pages
   - NOTE: Register requires check to make sure username is unique
+
+alexandruC -- 2025-12-10 10:26
+  - Added flashing to login -- might add to other ones next
