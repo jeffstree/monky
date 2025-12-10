@@ -130,6 +130,44 @@ CREATE TABLE IF NOT EXISTS bird_stats (
     FOREIGN KEY (username) REFERENCES users(username)
 )""")
 
+c.execute("""
+CREATE TABLE IF NOT EXISTS bird_info (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    family TEXT,
+    order TEXT,
+    status TEXT,
+    wingspan_min INTEGER,
+    wingspan_max INTEGER,
+    length_min INTEGER,
+    length_max INTEGER,
+)""")
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS cat_info (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    orgin TEXT,
+    life_span INTEGER,
+    inteligence INTEGER,
+    social_needs INTEGER,
+    weight_min INTEGER,
+    weight_max INTEGER,
+)""")
+# Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
+# Cat returns "life_span":"14 - 15", use upper value
+c.execute("""
+CREATE TABLE IF NOT EXISTS poke_info (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    family TEXT,
+    order TEXT,
+    status TEXT,
+    wingspan_min INTEGER,
+    wingspan_max INTEGER,
+    length_min INTEGER,
+    length_max INTEGER,
+)""")
 #==========================================================
 #SQLITE3 DATABASE LIES ABOVE HERE
 #==========================================================
