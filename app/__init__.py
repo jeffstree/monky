@@ -52,6 +52,8 @@ def register():
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
+        if("SELECT exists(SELECT 1 FROM users WHERE username = ?)", (username)):
+            return render_template("register.html", error = "Username already exists!")
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
         session['username'] = username
         return redirect(url_for('home'))
@@ -129,43 +131,43 @@ CREATE TABLE IF NOT EXISTS bird_stats (
     daily_streak INTEGER,
     FOREIGN KEY (username) REFERENCES users(username)
 )""")
-
-c.execute("""
-CREATE TABLE IF NOT EXISTS bird_info (
-    id INTEGER PRIMARY KEY,
-    name TEXT,
-    family TEXT,
-    order TEXT,
-    status TEXT,
-    wingspan_min INTEGER,
-    wingspan_max INTEGER,
-    length_min INTEGER,
-    length_max INTEGER,
-)""")
-
-c.execute("""
-CREATE TABLE IF NOT EXISTS cat_info (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    orgin TEXT,
-    life_span INTEGER,
-    inteligence INTEGER,
-    social_needs INTEGER,
-    weight_min INTEGER,
-    weight_max INTEGER,
-)""")
-# Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
-# Cat returns "life_span":"14 - 15", use upper value
-c.execute("""
-CREATE TABLE IF NOT EXISTS poke_info (
-    id INTEGER PRIMARY KEY,
-    name TEXT,
-    type_one TEXT,
-    type_two TEXT,
-    height INTEGER
-    weight INTEGER
-    generation INTEGER,
-)""")
+#
+# c.execute("""
+# CREATE TABLE IF NOT EXISTS bird_info (
+#     id INTEGER PRIMARY KEY,
+#     name TEXT,
+#     family TEXT,
+#     order TEXT,
+#     status TEXT,
+#     wingspan_min INTEGER,
+#     wingspan_max INTEGER,
+#     length_min INTEGER,
+#     length_max INTEGER,
+# )""")
+#
+# c.execute("""
+# CREATE TABLE IF NOT EXISTS cat_info (
+#     id TEXT PRIMARY KEY,
+#     name TEXT,
+#     orgin TEXT,
+#     life_span INTEGER,
+#     inteligence INTEGER,
+#     social_needs INTEGER,
+#     weight_min INTEGER,
+#     weight_max INTEGER,
+# )""")
+# # Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
+# # Cat returns "life_span":"14 - 15", use upper value
+# c.execute("""
+# CREATE TABLE IF NOT EXISTS poke_info (
+#     id INTEGER PRIMARY KEY,
+#     name TEXT,
+#     type_one TEXT,
+#     type_two TEXT,
+#     height INTEGER
+#     weight INTEGER
+#     generation INTEGER,
+# )""")
 # Height and Weight are divided by 10
 # Generation is returned as
 
