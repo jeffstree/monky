@@ -25,8 +25,7 @@ Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
         {% for message in messages %}
           {{message}}
         {% endfor %}
-      {% endif %}
-    {% endwith %}
+     {% endwith %}
 
      <form method="POST" action="{{ url_for('register') }}">
        <label>Username:</label><br>
