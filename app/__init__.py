@@ -31,7 +31,10 @@ def home():
 def login():
     #if already logged in
     if 'username' in session:
-        return redirect(request.referrer)
+        if request.referrer != None:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('home'))
 
     #if info given
     if request.method == "POST":
@@ -44,7 +47,6 @@ def login():
             return render_template('login.html', error=error)
 
         session['username'] = username
-        db.commit()
         return redirect(url_for('home'))
 
     return render_template("login.html")
@@ -53,19 +55,26 @@ def login():
 def register():
     #if already logged in
     if 'username' in session:
-        return redirect(request.referrer)
+        if request.referrer != None:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('home'))
 
     #if info given
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
-
+        if " " in username:
+            return render_template("register.html", error = "Username cannot contain spaces!")
+        if username == "Guest":
+            return render_template("register.html", error = "Username not allowed!")
         if c.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone():
             return render_template("register.html", error = "Username already exists!")
 
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
         c.execute("INSERT OR REPLACE INTO cat_stats (username, wins, last_daily, daily_streak) VALUES (?, ?, ?, ?)", (username, 0, None, 0))
         session['username'] = username
+
         return redirect(url_for('home'))
 
     return render_template("register.html")
