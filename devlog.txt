@@ -40,3 +40,6 @@ alexandruC -- 2025-12-10 10:26
 jiefengO -- 2025-12-10 11:00
   - Fixed bug with Register
   - Began work on displaying user data in home
+
+wesleyL -- 2025-12-10 11:00
+  - added databases for the apis
