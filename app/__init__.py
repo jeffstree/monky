@@ -105,14 +105,14 @@ nuthatch_key = key_load("NuthatchAPI")
 #SQLITE3 DATABASE LIES BENEATH HERE
 #==========================================================
 
-#users (username, password)
+'''users (username, password)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS users (
     username TEXT PRIMARY KEY,
     password TEXT
 )""")
 
-#poke_stats (username, wins, last_daily, daily_streak)
+'''poke_stats (username, wins, last_daily, daily_streak)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS poke_stats (
     username TEXT,
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS poke_stats (
     FOREIGN KEY (username) REFERENCES users(username)
 )""")
 
-#cat_stats (username, wins, last_daily, daily_streak)
+'''cat_stats (username, wins, last_daily, daily_streak)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS cat_stats (
     username TEXT,
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS cat_stats (
     FOREIGN KEY (username) REFERENCES users(username)
 )""")
 
-#bird_stats (username, wins, last_daily, daily_streak)
+'''bird_stats (username, wins, last_daily, daily_streak)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS bird_stats (
     username TEXT,
@@ -142,6 +142,7 @@ CREATE TABLE IF NOT EXISTS bird_stats (
     FOREIGN KEY (username) REFERENCES users(username)
 )""")
 
+'''bird_info (id, name, family, order, status, wingspan_min, wingspan_max, length_min, length_max)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS bird_info (
     id INTEGER PRIMARY KEY,
@@ -155,6 +156,11 @@ CREATE TABLE IF NOT EXISTS bird_info (
     length_max INTEGER
 )""")
 
+'''
+cat_info(id, name, origin, life_span, inteligence, social_needs, weight_min, weight_max)
+Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
+Cat returns "life_span":"14 - 15", use upper value
+'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS cat_info (
     id TEXT PRIMARY KEY,
@@ -167,9 +173,7 @@ CREATE TABLE IF NOT EXISTS cat_info (
     weight_max INTEGER
 )""")
 
-# Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
-# Cat returns "life_span":"14 - 15", use upper value
-
+'''poke_info(id, name, type_one, type_two, height, weight, generation)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS poke_info (
     id INTEGER PRIMARY KEY,
