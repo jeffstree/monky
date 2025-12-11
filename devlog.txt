@@ -51,3 +51,8 @@ alexandruC -- 2025-12-10 10:34
 alexandruC -- 2025-12-10 10:41
   - added last few docstrings in the format I found them in, might use different
   docstrings though because they arent that descriptive
+
+jiefengO -- 2025-12-11 11:00
+  - Added data to home screen, not yet formatted
+  - Added extra username checks
+  - Fixed a bug where the referrer can be None
