@@ -47,3 +47,7 @@ wesleyL -- 2025-12-10 11:00
 alexandruC -- 2025-12-10 10:34
   - made comments in setting up dbs into docstrings because we are putting our
   db creation into a separate file and this would be like good and stuff.
+
+alexandruC -- 2025-12-10 10:41
+  - added last few docstrings in the format I found them in, might use different
+  docstrings though because they arent that descriptive
