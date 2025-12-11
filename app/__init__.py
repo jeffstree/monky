@@ -18,10 +18,11 @@ c = db.cursor()
 def home():
     if 'username' in session:
         user = session['username']
-        #catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user)).fetchall()
+        print(c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)))
+        catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)).fetchall()
     else:
         user = "Guest"
-        #catdata = None
+        catdata = None
 
 
     return render_template("home.html", user = user, catdata = catdata)
@@ -58,9 +59,12 @@ def register():
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
-        if("SELECT exists(SELECT 1 FROM users WHERE username = ?)", (username)):
+
+        if c.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone():
             return render_template("register.html", error = "Username already exists!")
+
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+        c.execute("INSERT OR REPLACE INTO cat_stats (username, wins, last_daily, daily_streak) VALUES (?, ?, ?, ?)", (username, 0, None, 0))
         session['username'] = username
         return redirect(url_for('home'))
 
