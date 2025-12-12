@@ -8,13 +8,14 @@ import sqlite3
 import os
 import urllib
 import json
+import random
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 DB_FILE="database.db"
-db = sqlite3.connect(DB_FILE, check_same_thread=False)
-c = db.cursor()
+#db = sqlite3.connect(DB_FILE, check_same_thread=False)
+#c = db.cursor()
 
 @app.route("/")
 def home():
@@ -116,6 +117,27 @@ def get_json(site, keys={}):
         print(f"Error fetching API for {site}: {exception}")
         return None
 
+def pokemon_parser():
+    poke_num = random.randint(1,151)
+    data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
+    url = data['species']['url']
+    pokemon_data = get_json(url)
+    if pokemon_data:
+       generation = pokemon_data['generation']['name']
+    else:
+        generation = "generation-i"
+    data_map = {"generation-i":1, "generation-ii":2, "generation-iii":3, "generation-iv":4, "generation-v":5}
+    gen = data_map.get(generation)
+    stats = {
+        "id": data['id'],
+        "name": data['name'],
+        "type_one": data['types'][0]['type']['name'],
+        "type_two": data['types'][1]['type']['name'] if len(data['types']) > 1 else "No Type",
+        "height": data['height'] / 10.0,
+        "weight": data['weight'] / 10.0,
+        "generation": gen,
+    }
+    return stats
 #==========================================================
 #KEYLOADING LIES ABOVE HERE
 #==========================================================
