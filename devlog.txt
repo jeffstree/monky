@@ -45,9 +45,22 @@ alexandruC -- 2025-12-10 10:34
   - made comments in setting up dbs into docstrings because we are putting our
   db creation into a separate file and this would be like good and stuff.
 
-alexandruC -- 2025-12-10 10:41
+alexandruC -- 2025-12-11 10:41
   - added last few docstrings in the format I found them in, might use different
   docstrings though because they arent that descriptive
 
 wesleyL -- 2025-12-10 11:00
-    - added databases for the apis
+      - added databases for the apis
+jiefengO -- 2025-12-11 11:00
+  - Added data to home screen, not yet formatted
+  - Added extra username checks
+  - Fixed a bug where the referrer can be None
+
+alexandruC -- 2025-12-11 9:20
+  - code to get json from site
+
+alexandruC -- 2025-12-11 9:38
+  - parse pokemon api
+
+wesleyL -- 2025-12-11 11:00
+      - added code to populate nutatch database
