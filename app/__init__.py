@@ -14,7 +14,10 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 DB_FILE="database.db"
-#db = sqlite3.connect(DB_FILE, check_same_thread=False)
+
+def db_connect():
+    db = sqlite3.connect(DB_FILE, check_same_thread=False)
+    return db
 #c = db.cursor()
 
 @app.route("/")
@@ -87,6 +90,31 @@ def logout():
     if 'username' in session:
         session.pop('username')
     return redirect(request.referrer)
+
+
+@app.route("/pokemon", methods=['GET', 'POST'])
+def pokemon_game():
+    poke_num = random.randint(1, 151)
+    target_pokemon = pokemon_parser(poke_num)
+    win = False
+    if request.method == "POST":
+        guess = request.form['guess'].lower().strip()
+        stats = pokemon_parser(guess)
+        if stats:
+            if stats['name'] == target_pokemon['name']:
+                win = True
+            feedback = {
+                "name": stats['name'],
+                "type_one": "match" if stats['type_one'] == target_pokemon['type_one'] else "no",
+                "type_two": "match" if stats['type_two'] == target_pokemon['type_two'] else "no",
+                "height": "match" if stats['height'] == target_pokemon['height'] else 
+                    ("higher" if target_pokemon['height'] > stats['height'] else "lower"),
+                "weight": "match" if stats['weight'] == target_pokemon['weight'] else 
+                    ("higher" if target_pokemon['weight'] > stats['weight'] else "lower"),
+                "generation": "match" if stats['generation'] == target_pokemon['generation'] else 
+                    ("higher" if target_pokemon['generation'] > stats['generation'] else "lower")
+            }
+    return render_template("poke.html", target=target_pokemon if win else None, feedback=feedback, won=win,)
 #==========================================================
 #KEYLOADING LIES BENEATH HERE
 #==========================================================
@@ -116,9 +144,8 @@ def get_json(site, keys={}):
     except Exception as exception:
         print(f"Error fetching API for {site}: {exception}")
         return None
-
-def pokemon_parser():
-    poke_num = random.randint(1,151)
+#TODO add db incorporation so we stop doing API calls
+def pokemon_parser(poke_num):
     data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
     url = data['species']['url']
     pokemon_data = get_json(url)
