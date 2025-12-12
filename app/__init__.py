@@ -6,6 +6,8 @@
 from flask import *
 import sqlite3
 import os
+import urllib
+import json
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -104,6 +106,15 @@ def key_load(key_name):
 
 cat_key = key_load("TheCatAPI")
 nuthatch_key = key_load("NuthatchAPI")
+
+def get_json(site, keys={}):
+    try:
+        request = urllib.request.Request(site, headers = keys)
+        with urllib.request.urlopen(request) as response:
+            return json.load(response)
+    except Exception as exception:
+        print(f"Error fetching API for {site}: {exception}")
+        return None
 
 #==========================================================
 #KEYLOADING LIES ABOVE HERE
