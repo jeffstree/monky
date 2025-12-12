@@ -18,10 +18,11 @@ c = db.cursor()
 def home():
     if 'username' in session:
         user = session['username']
-        #catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user)).fetchall()
+        print(c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)))
+        catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)).fetchall()
     else:
         user = "Guest"
-        #catdata = None
+        catdata = None
 
 
     return render_template("home.html", user = user, catdata = catdata)
@@ -30,7 +31,10 @@ def home():
 def login():
     #if already logged in
     if 'username' in session:
-        return redirect(request.referrer)
+        if request.referrer != None:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('home'))
 
     #if info given
     if request.method == "POST":
@@ -43,7 +47,6 @@ def login():
             return render_template('login.html', error=error)
 
         session['username'] = username
-        db.commit()
         return redirect(url_for('home'))
 
     return render_template("login.html")
@@ -52,16 +55,26 @@ def login():
 def register():
     #if already logged in
     if 'username' in session:
-        return redirect(request.referrer)
+        if request.referrer != None:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('home'))
 
     #if info given
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
-        if("SELECT exists(SELECT 1 FROM users WHERE username = ?)", (username)):
+        if " " in username:
+            return render_template("register.html", error = "Username cannot contain spaces!")
+        if username == "Guest":
+            return render_template("register.html", error = "Username not allowed!")
+        if c.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone():
             return render_template("register.html", error = "Username already exists!")
+
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+        c.execute("INSERT OR REPLACE INTO cat_stats (username, wins, last_daily, daily_streak) VALUES (?, ?, ?, ?)", (username, 0, None, 0))
         session['username'] = username
+
         return redirect(url_for('home'))
 
     return render_template("register.html")
@@ -101,14 +114,14 @@ nuthatch_key = key_load("NuthatchAPI")
 #SQLITE3 DATABASE LIES BENEATH HERE
 #==========================================================
 
-#users (username, password)
+'''users (username, password)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS users (
     username TEXT PRIMARY KEY,
     password TEXT
 )""")
 
-#poke_stats (username, wins, last_daily, daily_streak)
+'''poke_stats (username, wins, last_daily, daily_streak)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS poke_stats (
     username TEXT,
@@ -118,7 +131,7 @@ CREATE TABLE IF NOT EXISTS poke_stats (
     FOREIGN KEY (username) REFERENCES users(username)
 )""")
 
-#cat_stats (username, wins, last_daily, daily_streak)
+'''cat_stats (username, wins, last_daily, daily_streak)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS cat_stats (
     username TEXT,
@@ -128,7 +141,7 @@ CREATE TABLE IF NOT EXISTS cat_stats (
     FOREIGN KEY (username) REFERENCES users(username)
 )""")
 
-#bird_stats (username, wins, last_daily, daily_streak)
+'''bird_stats (username, wins, last_daily, daily_streak)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS bird_stats (
     username TEXT,
@@ -138,6 +151,7 @@ CREATE TABLE IF NOT EXISTS bird_stats (
     FOREIGN KEY (username) REFERENCES users(username)
 )""")
 
+'''bird_info (id, name, family, order, status, wingspan_min, wingspan_max, length_min, length_max)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS bird_info (
     id INTEGER PRIMARY KEY,
@@ -151,6 +165,11 @@ CREATE TABLE IF NOT EXISTS bird_info (
     length_max INTEGER
 )""")
 
+'''
+cat_info(id, name, origin, life_span, inteligence, social_needs, weight_min, weight_max)
+Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
+Cat returns "life_span":"14 - 15", use upper value
+'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS cat_info (
     id TEXT PRIMARY KEY,
@@ -163,9 +182,7 @@ CREATE TABLE IF NOT EXISTS cat_info (
     weight_max INTEGER
 )""")
 
-# Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
-# Cat returns "life_span":"14 - 15", use upper value
-
+'''poke_info(id, name, type_one, type_two, height, weight, generation)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS poke_info (
     id INTEGER PRIMARY KEY,
