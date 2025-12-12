@@ -19,7 +19,11 @@ Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
      <a href="{{url_for('logout')}}">Logout</a>
 
      {% if catdata %}
-      <p>{{ catdata }}</p>
+       {% for data in catdata %}
+         <li>
+           <p> {{ data }} </p>
+         </li>
+       {% endfor %}
      {% endif %}
    </body>
  </html>

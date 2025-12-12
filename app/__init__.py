@@ -14,21 +14,24 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 DB_FILE="database.db"
-#db = sqlite3.connect(DB_FILE, check_same_thread=False)
-#c = db.cursor()
+db = sqlite3.connect(DB_FILE, check_same_thread=False)
+c = db.cursor()
 
 @app.route("/")
 def home():
     if 'username' in session:
         user = session['username']
         print(c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)))
-        catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)).fetchall()
+        pokedata = c.execute("SELECT * FROM poke_stats WHERE username=?", (user,)).fetchone()
+        catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)).fetchone()
+        birddata = c.execute("SELECT * FROM bird_stats WHERE username=?", (user,)).fetchone()
     else:
         user = "Guest"
+        pokedata = None
         catdata = None
+        birddata = None
 
-
-    return render_template("home.html", user = user, catdata = catdata)
+    return render_template("home.html", user = user, pokedata = pokedata, catdata = catdata, birddata = birddata)
 
 @app.route("/login", methods=['GET','POST'])
 def login():
