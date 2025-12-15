@@ -17,6 +17,18 @@ DB_FILE="database.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
 
+@app.route("/poke", methods=['GET', 'POST'])
+def poke():
+    return render_template("poke.html")
+
+@app.route("/cat", methods=['GET', 'POST'])
+def cat():
+    return render_template("cat.html")
+
+@app.route("/bird", methods=['GET', 'POST'])
+def bird():
+    return render_template("bird.html")
+
 @app.route("/")
 def home():
     if 'username' in session:
