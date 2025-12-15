@@ -78,12 +78,15 @@ def fetch_cat_data():
     cat_data = []
     page = 0
     page_max = 10
+    headers = {
+        "x-api-key": cat_key
+    }
     while page < page_max:
-        params = {"page": page,'x-api-key' : cat_key, "limit":100, "has_breeds" : 1}
+        params = {"page": page,"api_key" : cat_key, "limit":100, "has_breeds" : 1}
 
         try:
             url = f"{API_BASE_URL}{API_ENDPOINT}"
-            response = requests.get(url, params=params)
+            response = requests.get(url, headers=headers, params=params)
             response.raise_for_status()
             data = response.json()[0]
             print(data)
