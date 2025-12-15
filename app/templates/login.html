@@ -10,6 +10,7 @@ Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
 <html>
    <head>
      <title>Login</title>
+     <script src ="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"> </script>
    </head>
 
    <body>
@@ -28,7 +29,7 @@ Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
           </div>
         {% endif %}
       {% endwith %}
-      
+
      <form method="POST" action="{{ url_for('login') }}">
        <label>Username:</label><br>
        <input type="text" name="username" required><br><br>
