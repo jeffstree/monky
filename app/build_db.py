@@ -77,7 +77,7 @@ def fetch_cat_data():
     API_ENDPOINT = "/v1/images/search"
     cat_data = []
     page = 0
-    page_max = 10
+    page_max = 100
     headers = {
         "x-api-key": cat_key
     }
@@ -89,19 +89,17 @@ def fetch_cat_data():
             response = requests.get(url, headers=headers, params=params)
             response.raise_for_status()
             data = response.json()[0]
-            print(data)
-            cats = data.get("", [])
-            cat_data.extend(data)
+            cats = data.get("breeds", [])
+            cat_data.extend(cats)
             time.sleep(1)
             page+=1
-            print(response)
 
         except requests.exceptions.RequestException as e:
             print(f"An error occurred during API request: {e}")
             break
 
     insert_query = """
-    INSERT INTO cat_info (
+    INSERT OR IGNORE INTO cat_info (
         id, name, origin, "life_span", intelligence, social_needs, weight_min, weight_max
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """
@@ -112,16 +110,16 @@ def fetch_cat_data():
         weight_parts = [part.strip() for part in imperial_weight_str.split(" - ")]
         weight_min = int(weight_parts[0]) if weight_parts else 0
         weight_max = int(weight_parts[1]) if len(weight_parts) > 1 else 0
-
-        print(cat)
-        cat.get("id"),
-        cat.get("name"),
-        cat.get("origin"),
-        life_span_upper,
-        cat.get("intelligence"),
-        cat.get("social_needs"),
-        weight_min,
-        weight_max
+        record = (
+            cat.get("id"),
+            cat.get("name"),
+            cat.get("origin"),
+            life_span_upper,
+            cat.get("intelligence"),
+            cat.get("social_needs"),
+            weight_min,
+            weight_max
+        )
         data_to_insert.append(record)
 
     try:
