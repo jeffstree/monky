@@ -8,10 +8,6 @@ db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
 
 
-nuthatch_key = key_load("NuthatchAPI")
-
-
-
 def fetch_bird_data():
     nuthatch_key = key_load("NuthatchAPI")
     API_BASE_URL = "https://nuthatch.lastelm.software"
@@ -80,19 +76,21 @@ def fetch_cat_data():
     API_BASE_URL = "https://api.thecatapi.com"
     API_ENDPOINT = "/v1/images/search"
     cat_data = []
-
+    page = 0
+    page_max = 10
     while page < page_max:
-        params = {"page": page,'x-api-key' : cat_key, "limit":100}
+        params = {"page": page,'x-api-key' : cat_key, "limit":100, "has_breeds" : 1}
 
         try:
             url = f"{API_BASE_URL}{API_ENDPOINT}"
-            response = requests.get(url, headers=headers, params=params)
+            response = requests.get(url, params=params)
             response.raise_for_status()
-            data = response.json()
-            cats = data.get("images", [])
-            cat_data.extend(cats)
-            page +=1
+            data = response.json()[0]
+            print(data)
+            cats = data.get("", [])
+            cat_data.extend(data)
             time.sleep(1)
+            page+=1
             print(response)
 
         except requests.exceptions.RequestException as e:
@@ -100,14 +98,9 @@ def fetch_cat_data():
             break
 
     insert_query = """
-    INSERT INTO bird_info (
+    INSERT INTO cat_info (
         id, name, origin, "life_span", intelligence, social_needs, weight_min, weight_max
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-        name = excluded.name,
-        family = excluded.family,
-        status = excluded.status,
-        wingspan_min = excluded.wingspan_min;
     """
     data_to_insert = []
     for cat in cat_data:
@@ -136,5 +129,5 @@ def fetch_cat_data():
         print(f"An SQLite error occurred: {e}")
     finally:
         db.close()
-fetch_bird_data()
+#fetch_bird_data()
 fetch_cat_data()

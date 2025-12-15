@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS bird_info (
 )""")
 
 '''
-cat_info(id, name, origin, life_span, inteligence, social_needs, weight_min, weight_max)
+cat_info(id, name, origin, life_span, intelligence, social_needs, weight_min, weight_max)
 Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
 Cat returns "life_span":"14 - 15", use upper value
 '''
@@ -212,9 +212,9 @@ c.execute("""
 CREATE TABLE IF NOT EXISTS cat_info (
     id TEXT PRIMARY KEY,
     name TEXT,
-    origin TEXT, -- Corrected typo from 'orgin'
+    origin TEXT,
     life_span INTEGER,
-    inteligence INTEGER,
+    intelligence INTEGER,
     social_needs INTEGER,
     weight_min INTEGER,
     weight_max INTEGER
