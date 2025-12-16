@@ -154,6 +154,9 @@ def pokemon_parser(poke_num):
     return stats
 
 def fetch_poke_data():
+    #data = get_json("https://pokeapi.co/api/v2/pokemon?limit=1024&offset=0")
+    #test = data['results']['']
+    #print(test)
     poke_data = []
     for poke_num in range(1, 1026):
         parsed_data = pokemon_parser(poke_num)

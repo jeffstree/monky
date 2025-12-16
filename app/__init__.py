@@ -104,6 +104,7 @@ def logout():
     if 'username' in session:
         session.pop('username')
     return redirect(request.referrer)
+
 #==========================================================
 #KEYLOADING LIES BENEATH HERE
 #==========================================================
