@@ -134,27 +134,6 @@ def get_json(site, keys={}):
         print(f"Error fetching API for {site}: {exception}")
         return None
 
-def pokemon_parser():
-    poke_num = random.randint(1,151)
-    data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
-    url = data['species']['url']
-    pokemon_data = get_json(url)
-    if pokemon_data:
-       generation = pokemon_data['generation']['name']
-    else:
-        generation = "generation-i"
-    data_map = {"generation-i":1, "generation-ii":2, "generation-iii":3, "generation-iv":4, "generation-v":5}
-    gen = data_map.get(generation)
-    stats = {
-        "id": data['id'],
-        "name": data['name'],
-        "type_one": data['types'][0]['type']['name'],
-        "type_two": data['types'][1]['type']['name'] if len(data['types']) > 1 else "No Type",
-        "height": data['height'] / 10.0,
-        "weight": data['weight'] / 10.0,
-        "generation": gen,
-    }
-    return stats
 #==========================================================
 #KEYLOADING LIES ABOVE HERE
 #==========================================================
@@ -216,7 +195,7 @@ CREATE TABLE IF NOT EXISTS bird_info (
 )""")
 
 '''
-cat_info(id, name, origin, life_span, inteligence, social_needs, weight_min, weight_max)
+cat_info(id, name, origin, life_span, intelligence, social_needs, weight_min, weight_max)
 Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
 Cat returns "life_span":"14 - 15", use upper value
 '''
@@ -224,9 +203,9 @@ c.execute("""
 CREATE TABLE IF NOT EXISTS cat_info (
     id TEXT PRIMARY KEY,
     name TEXT,
-    origin TEXT, -- Corrected typo from 'orgin'
+    origin TEXT,
     life_span INTEGER,
-    inteligence INTEGER,
+    intelligence INTEGER,
     social_needs INTEGER,
     weight_min INTEGER,
     weight_max INTEGER
