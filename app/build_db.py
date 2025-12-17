@@ -44,7 +44,6 @@ def fetch_bird_data():
     ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         family = excluded.family,
-        status = excluded.status,
         wingspan_min = excluded.wingspan_min;
     """
     data_to_insert = []
