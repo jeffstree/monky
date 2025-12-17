@@ -15,7 +15,7 @@ def fetch_bird_data():
     API_ENDPOINT = "/v2/birds"
     birds_data = []
     page = 1
-    page_max = 10
+    page_max = 20
 
     headers = {
         "API-Key": nuthatch_key
@@ -31,7 +31,7 @@ def fetch_bird_data():
             birds_page = data.get("entities", [])
             birds_data.extend(birds_page)
             page +=1
-            time.sleep(1)
+            time.sleep(0.01)
 
         except requests.exceptions.RequestException as e:
             print(f"An error occurred during API request: {e}")
@@ -39,7 +39,7 @@ def fetch_bird_data():
 
     insert_query = """
     INSERT INTO bird_info (
-        id, name, family, "order", status, wingspan_min, wingspan_max, length_min, length_max
+        id, name, family, "order", wingspan_min, wingspan_max, length_min, length_max
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
@@ -55,13 +55,13 @@ def fetch_bird_data():
             bird.get("name"),
             bird.get("family"),
             bird.get("order"),
-            bird.get("conservationStatus"),
             bird.get("wingspanMin"),
             bird.get("wingspanMax"),
             bird.get("lengthMin"),
             bird.get("lengthMax")
         )
-        data_to_insert.append(record)
+        if all(record):
+            data_to_insert.append(record)
 
     try:
         c.executemany(insert_query, data_to_insert)
@@ -78,12 +78,12 @@ def fetch_cat_data():
     API_ENDPOINT = "/v1/images/search"
     cat_data = []
     page = 0
-    page_max = 100
+    page_max = 200
     headers = {
         "x-api-key": cat_key
     }
     while page < page_max:
-        params = {"page": page,"api_key" : cat_key, "limit":100, "has_breeds" : 1}
+        params = {"page": page,"api_key" : cat_key, "has_breeds" : 1}
 
         try:
             url = f"{API_BASE_URL}{API_ENDPOINT}"
@@ -92,7 +92,7 @@ def fetch_cat_data():
             data = response.json()[0]
             cats = data.get("breeds", [])
             cat_data.extend(cats)
-            time.sleep(1)
+            time.sleep(0.01)
             page+=1
 
         except requests.exceptions.RequestException as e:
@@ -106,6 +106,7 @@ def fetch_cat_data():
     """
     data_to_insert = []
     for cat in cat_data:
+        print(cat)
         life_span_upper = int(cat.get("life_span", "0 - 0").split(" - ")[1].strip())
         imperial_weight_str = cat.get("weight", {}).get("imperial", "0 - 0")
         weight_parts = [part.strip() for part in imperial_weight_str.split(" - ")]
@@ -121,7 +122,8 @@ def fetch_cat_data():
             weight_min,
             weight_max
         )
-        data_to_insert.append(record)
+        if all(record):
+            data_to_insert.append(record)
 
     try:
         c.executemany(insert_query, data_to_insert)
@@ -160,10 +162,11 @@ def fetch_poke_data():
     poke_data = []
     for poke_num in range(1, 1026):
         parsed_data = pokemon_parser(poke_num)
-        c.execute("INSERT OR IGNORE INTO poke_info (id, name, type_one, type_two, height, weight, generation) VALUES (?, ?, ?, ?, ?, ?, ?)", parsed_data)
+        poke_data.append(parsed_data)
+    c.executemany("INSERT OR IGNORE INTO poke_info (id, name, type_one, type_two, height, weight, generation) VALUES (?, ?, ?, ?, ?, ?, ?)", poke_data)
     db.commit()
 
 
 fetch_poke_data()
 #fetch_bird_data()
-fetch_cat_data()
+#fetch_cat_data()
