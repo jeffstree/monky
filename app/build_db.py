@@ -15,7 +15,7 @@ def fetch_bird_data():
     API_ENDPOINT = "/v2/birds"
     birds_data = []
     page = 1
-    page_max = 20
+    page_max = 30
 
     headers = {
         "API-Key": nuthatch_key
@@ -40,7 +40,7 @@ def fetch_bird_data():
     insert_query = """
     INSERT INTO bird_info (
         id, name, family, "order", wingspan_min, wingspan_max, length_min, length_max
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         family = excluded.family,
@@ -160,7 +160,7 @@ def fetch_poke_data():
     #test = data['results']['']
     #print(test)
     poke_data = []
-    for poke_num in range(1, 1026):
+    for poke_num in range(1, 10):
         parsed_data = pokemon_parser(poke_num)
         poke_data.append(parsed_data)
     c.executemany("INSERT OR IGNORE INTO poke_info (id, name, type_one, type_two, height, weight, generation) VALUES (?, ?, ?, ?, ?, ?, ?)", poke_data)
@@ -168,5 +168,5 @@ def fetch_poke_data():
 
 
 fetch_poke_data()
-#fetch_bird_data()
+fetch_bird_data()
 #fetch_cat_data()
