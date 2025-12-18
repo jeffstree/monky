@@ -8,6 +8,19 @@ DB_FILE="database.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
 
+def key_load(key_name):
+    try:
+        key_path = os.path.join(os.path.dirname(__file__), "keys", f"key_{key_name}.txt")
+        with open (key_path, "r") as f:
+            text = f.read().strip()
+            if not text:
+                print(f"File is empty for: {key_name}")
+                return None
+            print(f"Loaded key for: {key_name}")
+            return text
+    except Exception as exception:
+        print(f"Failed to load key for {key_name}: {exception}")
+        return None
 
 def fetch_bird_data():
     nuthatch_key = key_load("NuthatchAPI")
@@ -133,39 +146,44 @@ def fetch_cat_data():
     finally:
         db.close()
 
-def pokemon_parser(poke_num):
-    data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
-    url = data['species']['url']
-    pokemon_data = get_json(url)
-    if pokemon_data:
-       generation = pokemon_data['generation']['name']
-    else:
-        generation = "generation-i"
-    data_map = {"generation-i":1, "generation-ii":2, "generation-iii":3, "generation-iv":4, "generation-v":5}
-    gen = data_map.get(generation)
-    stats = (
-        data['id'],
-        data['name'],
-        data['types'][0]['type']['name'],
-        data['types'][1]['type']['name'] if len(data['types']) > 1 else "No Type",
-        data['height'] / 10.0,
-        data['weight'] / 10.0,
-        gen
-        )
-    return stats
-
 def fetch_poke_data():
-    #data = get_json("https://pokeapi.co/api/v2/pokemon?limit=1024&offset=0")
-    #test = data['results']['']
-    #print(test)
     poke_data = []
-    for poke_num in range(1, 10):
-        parsed_data = pokemon_parser(poke_num)
-        poke_data.append(parsed_data)
-    c.executemany("INSERT OR IGNORE INTO poke_info (id, name, type_one, type_two, height, weight, generation) VALUES (?, ?, ?, ?, ?, ?, ?)", poke_data)
-    db.commit()
+    for poke_num in range(1, 650):
+        data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
+        url = data['species']['url']
+        pokemon_data = get_json(url)
+        if pokemon_data:
+           generation = pokemon_data['generation']['name']
+        else:
+            generation = "generation-i"
+        data_map = {"generation-i":1, "generation-ii":2, "generation-iii":3, "generation-iv":4, "generation-v":5}
+        gen = data_map.get(generation)
+        stats = (
+            data['id'],
+            data['name'],
+            data['types'][0]['type']['name'],
+            data['types'][1]['type']['name'] if len(data['types']) > 1 else "No Type",
+            data['height'] / 10.0,
+            data['weight'] / 10.0,
+            gen
+            )
+        poke_data.append(stats)
+    try:
+        c.executemany("INSERT OR IGNORE INTO poke_info (id, name, type_one, type_two, height, weight, generation) VALUES (?, ?, ?, ?, ?, ?, ?)", poke_data)
+        db.commit()
+        print(f"\nSuccessfully inserted/updated {len(data_to_insert)} pokemon records.")
+    except sqlite3.Error as e:
+        print(f"An SQLite error occurred: {e}")
+    finally:
+        db.close()
+def fetch_all():
+    fetch_poke_data()
+    fetch_bird_data()
+    fetch_cat_data()
 
+def query_pokemon():
 
-fetch_poke_data()
-fetch_bird_data()
-#fetch_cat_data()
+def query_cat():
+
+def query_bird():
+    

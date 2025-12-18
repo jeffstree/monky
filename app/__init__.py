@@ -126,67 +126,14 @@ def pokemon_game():
                 "name": stats['name'],
                 "type_one": "match" if stats['type_one'] == target_pokemon['type_one'] else "no",
                 "type_two": "match" if stats['type_two'] == target_pokemon['type_two'] else "no",
-                "height": "match" if stats['height'] == target_pokemon['height'] else 
+                "height": "match" if stats['height'] == target_pokemon['height'] else
                     ("higher" if target_pokemon['height'] > stats['height'] else "lower"),
-                "weight": "match" if stats['weight'] == target_pokemon['weight'] else 
+                "weight": "match" if stats['weight'] == target_pokemon['weight'] else
                     ("higher" if target_pokemon['weight'] > stats['weight'] else "lower"),
-                "generation": "match" if stats['generation'] == target_pokemon['generation'] else 
+                "generation": "match" if stats['generation'] == target_pokemon['generation'] else
                     ("higher" if target_pokemon['generation'] > stats['generation'] else "lower")
             }
     return render_template("poke.html", target=target_pokemon if win else None, feedback=feedback, won=win,)
-#==========================================================
-#KEYLOADING LIES BENEATH HERE
-#==========================================================
-
-def key_load(key_name):
-    try:
-        key_path = os.path.join(os.path.dirname(__file__), "keys", f"key_{key_name}.txt")
-        with open (key_path, "r") as f:
-            text = f.read().strip()
-            if not text:
-                print(f"File is empty for: {key_name}")
-                return None
-            print(f"Loaded key for: {key_name}")
-            return text
-    except Exception as exception:
-        print(f"Failed to load key for {key_name}: {exception}")
-        return None
-
-cat_key = key_load("TheCatAPI")
-nuthatch_key = key_load("NuthatchAPI")
-
-def get_json(site, keys={}):
-    try:
-        request = urllib.request.Request(site, headers = keys)
-        with urllib.request.urlopen(request) as response:
-            return json.load(response)
-    except Exception as exception:
-        print(f"Error fetching API for {site}: {exception}")
-        return None
-#TODO add db incorporation so we stop doing API calls
-def pokemon_parser(poke_num):
-    data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
-    url = data['species']['url']
-    pokemon_data = get_json(url)
-    if pokemon_data:
-       generation = pokemon_data['generation']['name']
-    else:
-        generation = "generation-i"
-    data_map = {"generation-i":1, "generation-ii":2, "generation-iii":3, "generation-iv":4, "generation-v":5}
-    gen = data_map.get(generation)
-    stats = {
-        "id": data['id'],
-        "name": data['name'],
-        "type_one": data['types'][0]['type']['name'],
-        "type_two": data['types'][1]['type']['name'] if len(data['types']) > 1 else "No Type",
-        "height": data['height'] / 10.0,
-        "weight": data['weight'] / 10.0,
-        "generation": gen,
-    }
-    return stats
-#==========================================================
-#KEYLOADING LIES ABOVE HERE
-#==========================================================
 
 
 #==========================================================
