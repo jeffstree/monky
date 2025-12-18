@@ -1,9 +1,9 @@
-from __init__ import key_load, get_json
 import requests
 import sqlite3
 import time
 import random
-
+import urllib
+import json
 DB_FILE="database.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
@@ -20,6 +20,14 @@ def key_load(key_name):
             return text
     except Exception as exception:
         print(f"Failed to load key for {key_name}: {exception}")
+        return None
+def get_json(site, keys={}):
+    try:
+        request = urllib.request.Request(site, headers = keys)
+        with urllib.request.urlopen(request) as response:
+            return json.load(response)
+    except Exception as exception:
+        print(f"Error fetching API for {site}: {exception}")
         return None
 
 def fetch_bird_data():
@@ -149,38 +157,40 @@ def fetch_cat_data():
 def fetch_poke_data():
     poke_data = []
     for poke_num in range(1, 650):
-        data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
-        url = data['species']['url']
-        pokemon_data = get_json(url)
-        if pokemon_data:
-           generation = pokemon_data['generation']['name']
+        pokemon_data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
+        if poke_num <= 151:
+            gen = 1
+        elif poke_num <= 251:
+            gen = 2
+        elif poke_num <= 386:
+            gen = 3
+        elif poke_num <= 493:
+            gen = 4
         else:
-            generation = "generation-i"
-        data_map = {"generation-i":1, "generation-ii":2, "generation-iii":3, "generation-iv":4, "generation-v":5}
-        gen = data_map.get(generation)
+            gen = 5
         stats = (
-            data['id'],
-            data['name'],
-            data['types'][0]['type']['name'],
-            data['types'][1]['type']['name'] if len(data['types']) > 1 else "No Type",
-            data['height'] / 10.0,
-            data['weight'] / 10.0,
+            pokemon_data['id'],
+            pokemon_data['name'],
+            pokemon_data['types'][0]['type']['name'],
+            pokemon_data['types'][1]['type']['name'] if len(pokemon_data['types']) > 1 else "No Type",
+            pokemon_data['height'] / 10.0,
+            pokemon_data['weight'] / 10.0,
             gen
             )
         poke_data.append(stats)
     try:
         c.executemany("INSERT OR IGNORE INTO poke_info (id, name, type_one, type_two, height, weight, generation) VALUES (?, ?, ?, ?, ?, ?, ?)", poke_data)
         db.commit()
-        print(f"\nSuccessfully inserted/updated {len(data_to_insert)} pokemon records.")
+        print(f"\nSuccessfully inserted/updated {len(poke_data)} pokemon records.")
     except sqlite3.Error as e:
         print(f"An SQLite error occurred: {e}")
     finally:
         db.close()
 def fetch_all():
     fetch_poke_data()
-    fetch_bird_data()
-    fetch_cat_data()
-
+    #fetch_bird_data()
+    #fetch_cat_data()
+    print("Finished Fetching")
 def query_pokemon(name):
     c.execute("SELECT * FROM poke_info WHERE name = ? COLLATE NOCASE", (name,))
     return c.fetchone()
@@ -192,3 +202,4 @@ def query_cat(name):
 def query_bird(name):
     c.execute("SELECT * FROM bird_info WHERE name = ? COLLATE NOCASE", (name,))
     return c.fetchone()
+fetch_all()
