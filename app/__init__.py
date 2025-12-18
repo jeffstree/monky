@@ -19,19 +19,36 @@ def db_connect():
     db = sqlite3.connect(DB_FILE, check_same_thread=False)
     return db
 #c = db.cursor()
+db = sqlite3.connect(DB_FILE, check_same_thread=False)
+c = db.cursor()
+
+@app.route("/poke", methods=['GET', 'POST'])
+def poke():
+    return render_template("poke.html")
+
+@app.route("/cat", methods=['GET', 'POST'])
+def cat():
+    return render_template("cat.html")
+
+@app.route("/bird", methods=['GET', 'POST'])
+def bird():
+    return render_template("bird.html")
 
 @app.route("/")
 def home():
     if 'username' in session:
         user = session['username']
         print(c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)))
-        catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)).fetchall()
+        pokedata = c.execute("SELECT * FROM poke_stats WHERE username=?", (user,)).fetchone()
+        catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)).fetchone()
+        birddata = c.execute("SELECT * FROM bird_stats WHERE username=?", (user,)).fetchone()
     else:
         user = "Guest"
+        pokedata = None
         catdata = None
+        birddata = None
 
-
-    return render_template("home.html", user = user, catdata = catdata)
+    return render_template("home.html", user = user, pokedata = pokedata, catdata = catdata, birddata = birddata)
 
 @app.route("/login", methods=['GET','POST'])
 def login():
@@ -79,6 +96,8 @@ def register():
 
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
         c.execute("INSERT OR REPLACE INTO cat_stats (username, wins, last_daily, daily_streak) VALUES (?, ?, ?, ?)", (username, 0, None, 0))
+        c.execute("INSERT OR REPLACE INTO poke_stats (username, wins, last_daily, daily_streak) VALUES (?, ?, ?, ?)", (username, 0, None, 0))
+        c.execute("INSERT OR REPLACE INTO bird_stats (username, wins, last_daily, daily_streak) VALUES (?, ?, ?, ?)", (username, 0, None, 0))
         session['username'] = username
 
         return redirect(url_for('home'))
@@ -226,7 +245,7 @@ CREATE TABLE IF NOT EXISTS bird_info (
 )""")
 
 '''
-cat_info(id, name, origin, life_span, inteligence, social_needs, weight_min, weight_max)
+cat_info(id, name, origin, life_span, intelligence, social_needs, weight_min, weight_max)
 Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
 Cat returns "life_span":"14 - 15", use upper value
 '''
@@ -234,9 +253,9 @@ c.execute("""
 CREATE TABLE IF NOT EXISTS cat_info (
     id TEXT PRIMARY KEY,
     name TEXT,
-    origin TEXT, -- Corrected typo from 'orgin'
+    origin TEXT,
     life_span INTEGER,
-    inteligence INTEGER,
+    intelligence INTEGER,
     social_needs INTEGER,
     weight_min INTEGER,
     weight_max INTEGER

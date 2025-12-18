@@ -41,10 +41,7 @@ jiefengO -- 2025-12-10 11:00
   - Fixed bug with Register
   - Began work on displaying user data in home
 
-wesleyL -- 2025-12-10 11:00
-  - added databases for the apis
-
-alexandruC -- 2025-12-11 10:34
+alexandruC -- 2025-12-10 10:34
   - made comments in setting up dbs into docstrings because we are putting our
   db creation into a separate file and this would be like good and stuff.
 
@@ -52,6 +49,8 @@ alexandruC -- 2025-12-11 10:41
   - added last few docstrings in the format I found them in, might use different
   docstrings though because they arent that descriptive
 
+wesleyL -- 2025-12-10 11:00
+      - added databases for the apis
 jiefengO -- 2025-12-11 11:00
   - Added data to home screen, not yet formatted
   - Added extra username checks
@@ -65,3 +64,24 @@ alexandruC -- 2025-12-11 9:38
 
 alexandruC -- 2025-12-11 10:00
   - route for pokemon game made
+wesleyL -- 2025-12-11 11:00
+      - added code to populate nutatch database
+
+jiefengO -- 2025-12-12 11:00
+  - Added unfinished code for home
+
+alexandruC -- 2025-12-15 10:43
+  - Made basic routes for pages without routes
+
+jiefengO -- 2025-12-15 11:00
+  - Added pokemon data to database (very very slow)
+
+  alexandruC -- 2025-12-15 10:47
+    - Links from html pages to others
+
+jiefengO -- 2025-12-16 11:00
+  - Thought about code to make pokemon parser faster (aka code does not work at all)
+
+wesleyL -- 2025-12-17 10:29
+  - updated cat and bird api to throttle calls for less time
+  - updated cat bird calls
