@@ -16,5 +16,69 @@ Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
      <a href="{{url_for('poke')}}">bird</a>
      <a href="{{url_for('home')}}">home</a>
      <a href="{{url_for('cat')}}">cat</a>
+     {% if won %}
+        <div class="bg-green-100 border">
+            <strong class="font-bold">You Won!</strong>
+            <span class="block sm:inline">The Pokémon was {{target.name}}!</span>
+        </div>
+    {% endif %}
+    <div class="flex justify-center mb-8">
+            <form method="POST" action="{{url_for('pokemon_game')}}" class="flex gap-2">
+                <input type="text" name="guess" placeholder="Enter Pokémon Name" required>
+                <button type="submit">
+                    Guess
+                </button>
+            </form>
+        </div>
+        {% if feedback %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto border border-gray-300 text-center">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-3 border">Name</th>
+                        <th class="p-3 border">Type 1</th>
+                        <th class="p-3 border">Type 2</th>
+                        <th class="p-3 border">Height</th>
+                        <th class="p-3 border">Weight</th>
+                        <th class="p-3 border">Gen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="p-3 border font-bold uppercase">{{feedback.name}}</td>
+                        <td class="p-3 border {% if feedback.type_one == 'match' %}bg-green-400{% else %}bg-red-300{% endif %}">
+                            {{feedback.type_one}}
+                        </td>
+
+                        <td class="p-3 border {% if feedback.type_two == 'match' %}bg-green-400{% else %}bg-red-300{% endif %}">
+                            {{feedback.type_two}}
+                        </td>
+                        <td class="p-3 border {% if feedback.height == 'match' %}bg-green-400{% else %}bg-yellow-200{% endif %}">
+                           {% if feedback.height == 'match' %}
+                             Correct
+                           {% else %}
+                             {{feedback.height}}
+                           {% endif %}
+                        </td>
+                        <td class="p-3 border {% if feedback.weight == 'match' %}bg-green-400{% else %}bg-yellow-200{% endif %}">
+                           {% if feedback.weight == 'match' %}
+                             Correct
+                           {% else %}
+                             {{feedback.weight}}
+                           {% endif %}
+                        </td>
+                        <td class="p-3 border {% if feedback.generation == 'match' %}bg-green-400{% else %}bg-yellow-200{% endif %}">
+                           {% if feedback.generation == 'match' %}
+                             Correct
+                           {% else %}
+                             {{feedback.generation}}
+                           {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+     </div>
    </body>
 </html>
