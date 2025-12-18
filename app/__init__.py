@@ -9,7 +9,7 @@ import os
 import urllib
 import json
 import random
-
+from build_db import query_cat, query_bird, query_pokemon
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
@@ -113,27 +113,31 @@ def logout():
 
 @app.route("/pokemon", methods=['GET', 'POST'])
 def pokemon_game():
-    poke_num = random.randint(1, 151)
-    target_pokemon = pokemon_parser(poke_num)
+    target_pokemon = query_pokemon("pikachu")
     win = False
     if request.method == "POST":
         guess = request.form['guess'].lower().strip()
-        stats = pokemon_parser(guess)
+        stats = query_pokemon(guess)
+        print(stats)
+        print("-------------------")
+        print(target_pokemon)
         if stats:
-            if stats['name'] == target_pokemon['name']:
+            if stats[1] == target_pokemon[1]:
                 win = True
             feedback = {
-                "name": stats['name'],
-                "type_one": "match" if stats['type_one'] == target_pokemon['type_one'] else "no",
-                "type_two": "match" if stats['type_two'] == target_pokemon['type_two'] else "no",
-                "height": "match" if stats['height'] == target_pokemon['height'] else
-                    ("higher" if target_pokemon['height'] > stats['height'] else "lower"),
-                "weight": "match" if stats['weight'] == target_pokemon['weight'] else
-                    ("higher" if target_pokemon['weight'] > stats['weight'] else "lower"),
-                "generation": "match" if stats['generation'] == target_pokemon['generation'] else
-                    ("higher" if target_pokemon['generation'] > stats['generation'] else "lower")
+                "name": stats[1],
+                "type_one": "match" if stats[2] == target_pokemon[2] else "no",
+                "type_two": "match" if stats[3] == target_pokemon[3] else "no",
+                "height": "match" if stats[4] == target_pokemon[4] else
+                    ("higher" if target_pokemon[4] > stats[4] else "lower"),
+                "weight": "match" if stats[5] == target_pokemon[5] else
+                    ("higher" if target_pokemon[5] > stats[5] else "lower"),
+                "generation": "match" if stats[6] == target_pokemon[6] else
+                    ("higher" if target_pokemon[6] > stats[6] else "lower")
             }
-    return render_template("poke.html", target=target_pokemon if win else None, feedback=feedback, won=win,)
+        else:
+            feedback = "not "
+    return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
 
 
 #==========================================================
