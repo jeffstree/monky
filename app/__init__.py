@@ -10,6 +10,7 @@ import urllib
 import json
 import random
 from build_db import query_cat, query_bird, query_pokemon
+import datetime
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -46,6 +47,32 @@ FALLBACK_BIRDS = [
     {'name': 'Northern Cardinal', 'family': 'Cardinalidae', 'order': 'Passeriformes', 'wingspan_min': 25, 'wingspan_max': 31, 'length': 23},
     {'name': 'Great Horned Owl', 'family': 'Strigidae', 'order': 'Strigiformes', 'wingspan_min': 101, 'wingspan_max': 145, 'length': 63}
 ]
+
+def get_daily_target(game_type):
+    today = datetime.date.today()
+    seed = today.year * 10000 + today.month * 100 + today.day
+    r = random.Random(seed)
+
+    table_map = {'poke': 'poke_info', 'cat': 'cat_info', 'bird': 'bird_info'}
+    table = table_map[game_type]
+    
+    db = get_db_connection()
+    c = db.cursor()
+    try:
+        c.execute(f'SELECT count(*) FROM {table}')
+        total = c.fetchone()[0]
+        if total > 0:
+            offset = r.randint(0, total - 1)
+            c.execute(f'SELECT * FROM {table} LIMIT 1 OFFSET ?', (offset,))
+            row = c.fetchone()
+            return dict(row)
+    except Exception:
+        pass
+    finally:
+        db.close()
+
+    fallbacks = {'poke': FALLBACK_POKEMON, 'cat': FALLBACK_CATS, 'bird': FALLBACK_BIRDS}
+    return r.choice(fallbacks[game_type])
 
 @app.route("/poke", methods=['GET', 'POST'])
 def poke():
