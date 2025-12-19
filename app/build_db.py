@@ -1,12 +1,66 @@
+# Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
+# monky
+# SoftDev
+# P01: ArRESTed Development
+
 import requests
 import sqlite3
 import time
 import random
 import urllib
 import json
+import os
 DB_FILE="database.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
+
+#==========================================================
+#SQLITE3 DATABASE LIES BENEATH HERE
+#==========================================================
+
+
+'''bird_info (id, name, family, order, wingspan_min, wingspan_max, length_min, length_max)'''
+c.execute("""
+CREATE TABLE IF NOT EXISTS bird_info (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    family TEXT,
+    "order" TEXT,
+    wingspan_min INTEGER,
+    wingspan_max INTEGER,
+    length_min INTEGER,
+    length_max INTEGER
+)""")
+
+'''
+cat_info(id, name, origin, life_span, intelligence, social_needs, weight_min, weight_max)
+Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
+Cat returns "life_span":"14 - 15", use upper value
+'''
+c.execute("""
+CREATE TABLE IF NOT EXISTS cat_info (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    origin TEXT,
+    life_span INTEGER,
+    intelligence INTEGER,
+    social_needs INTEGER,
+    weight_min INTEGER,
+    weight_max INTEGER
+)""")
+
+'''poke_info(id, name, type_one, type_two, height, weight, generation)'''
+c.execute("""
+CREATE TABLE IF NOT EXISTS poke_info (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    type_one TEXT,
+    type_two TEXT,
+    height INTEGER,
+    weight INTEGER,
+    generation INTEGER
+)""")
+db.commit()
 
 def key_load(key_name):
     try:
@@ -69,7 +123,6 @@ def fetch_bird_data():
     """
     data_to_insert = []
     for bird in birds_data:
-        print(bird)
         record = (
             bird.get("id"),
             bird.get("name"),
@@ -89,8 +142,7 @@ def fetch_bird_data():
         print(f"\nSuccessfully inserted/updated {len(data_to_insert)} bird records.")
     except sqlite3.Error as e:
         print(f"An SQLite error occurred: {e}")
-    finally:
-        db.close()
+
 
 def fetch_cat_data():
     cat_key = key_load("TheCatAPI")
@@ -126,7 +178,6 @@ def fetch_cat_data():
     """
     data_to_insert = []
     for cat in cat_data:
-        print(cat)
         life_span_upper = int(cat.get("life_span", "0 - 0").split(" - ")[1].strip())
         imperial_weight_str = cat.get("weight", {}).get("imperial", "0 - 0")
         weight_parts = [part.strip() for part in imperial_weight_str.split(" - ")]
@@ -151,8 +202,7 @@ def fetch_cat_data():
         print(f"\nSuccessfully inserted/updated {len(data_to_insert)} cat records.")
     except sqlite3.Error as e:
         print(f"An SQLite error occurred: {e}")
-    finally:
-        db.close()
+
 
 def fetch_poke_data():
     poke_data = []
@@ -184,13 +234,14 @@ def fetch_poke_data():
         print(f"\nSuccessfully inserted/updated {len(poke_data)} pokemon records.")
     except sqlite3.Error as e:
         print(f"An SQLite error occurred: {e}")
-    finally:
-        db.close()
+
 def fetch_all():
     fetch_poke_data()
-    #fetch_bird_data()
-    #fetch_cat_data()
+    fetch_bird_data()
+    fetch_cat_data()
+    db.close()
     print("Finished Fetching")
+
 def query_pokemon(name):
     c.execute("SELECT * FROM poke_info WHERE name = ? COLLATE NOCASE", (name,))
     return c.fetchone()
@@ -202,4 +253,6 @@ def query_cat(name):
 def query_bird(name):
     c.execute("SELECT * FROM bird_info WHERE name = ? COLLATE NOCASE", (name,))
     return c.fetchone()
-fetch_all()
+
+if __name__ == "__main__":
+    fetch_all()
