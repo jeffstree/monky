@@ -131,9 +131,65 @@ def logout():
     return redirect(request.referrer)
 
 
-@app.route("/pokemon", methods=['GET', 'POST'])
+@app.route("/poke_game", methods=['GET', 'POST'])
 def pokemon_game():
     target_pokemon = query_pokemon("pikachu")
+    win = False
+    if request.method == "POST":
+        guess = request.form['guess'].lower().strip()
+        stats = query_pokemon(guess)
+        print(stats)
+        print("-------------------")
+        print(target_pokemon)
+        if stats:
+            if stats[1] == target_pokemon[1]:
+                win = True
+            feedback = {
+                "name": stats[1],
+                "type_one": "match" if stats[2] == target_pokemon[2] else "no",
+                "type_two": "match" if stats[3] == target_pokemon[3] else "no",
+                "height": "match" if stats[4] == target_pokemon[4] else
+                    ("higher" if target_pokemon[4] > stats[4] else "lower"),
+                "weight": "match" if stats[5] == target_pokemon[5] else
+                    ("higher" if target_pokemon[5] > stats[5] else "lower"),
+                "generation": "match" if stats[6] == target_pokemon[6] else
+                    ("higher" if target_pokemon[6] > stats[6] else "lower")
+            }
+        else:
+            feedback = "not "
+    return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
+
+@app.route("/cat_game", methods=['GET', 'POST'])
+def cat_game():
+    target_pokemon = query_cat("pikachu")
+    win = False
+    if request.method == "POST":
+        guess = request.form['guess'].lower().strip()
+        stats = query_pokemon(guess)
+        print(stats)
+        print("-------------------")
+        print(target_pokemon)
+        if stats:
+            if stats[1] == target_pokemon[1]:
+                win = True
+            feedback = {
+                "name": stats[1],
+                "type_one": "match" if stats[2] == target_pokemon[2] else "no",
+                "type_two": "match" if stats[3] == target_pokemon[3] else "no",
+                "height": "match" if stats[4] == target_pokemon[4] else
+                    ("higher" if target_pokemon[4] > stats[4] else "lower"),
+                "weight": "match" if stats[5] == target_pokemon[5] else
+                    ("higher" if target_pokemon[5] > stats[5] else "lower"),
+                "generation": "match" if stats[6] == target_pokemon[6] else
+                    ("higher" if target_pokemon[6] > stats[6] else "lower")
+            }
+        else:
+            feedback = "not "
+    return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
+
+@app.route("/bird_game", methods=['GET', 'POST'])
+def bird_game():
+    target_pokemon = query_bird("pikachu")
     win = False
     if request.method == "POST":
         guess = request.form['guess'].lower().strip()
