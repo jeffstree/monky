@@ -1,3 +1,8 @@
+# Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
+# monky
+# SoftDev
+# P01: ArRESTed Development
+
 import requests
 import sqlite3
 import time
@@ -191,6 +196,7 @@ def fetch_all():
     #fetch_bird_data()
     #fetch_cat_data()
     print("Finished Fetching")
+
 def query_pokemon(name):
     c.execute("SELECT * FROM poke_info WHERE name = ? COLLATE NOCASE", (name,))
     return c.fetchone()
@@ -202,4 +208,6 @@ def query_cat(name):
 def query_bird(name):
     c.execute("SELECT * FROM bird_info WHERE name = ? COLLATE NOCASE", (name,))
     return c.fetchone()
-fetch_all()
+
+if __name__ == "__main__":
+    fetch_all()

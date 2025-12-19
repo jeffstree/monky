@@ -22,12 +22,27 @@ Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
      <a href="{{url_for('cat')}}">cat</a>
      <a href="{{url_for('bird')}}">bird</a>
 
-     {% if catdata %}
-       {% for data in catdata %}
-         <li>
-           <p> {{ data }} </p>
-         </li>
-       {% endfor %}
-     {% endif %}
+     <table class="table-auto">
+      {% if user_data %}
+      <thead>
+        <tr>
+          <th>Game</th>
+          <th>Wins</th>
+          <th>Last Daily Won</th>
+          <th>Daily Streak</th>
+        </tr>
+      </thead>
+        {% for data in user_data %}
+        <tbody>
+          <tr>
+            <td>{{data[0]}}</td>
+            <td>{{data[1]}}</td>
+            <td>{{data[2]}}</td>
+            <td>{{data[3]}}</td>
+          </tr>
+        </tbody>
+        {% endfor %}
+      {% endif %}
+     </table>
    </body>
  </html>

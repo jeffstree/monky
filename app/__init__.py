@@ -10,15 +10,11 @@ import urllib
 import json
 import random
 from build_db import query_cat, query_bird, query_pokemon
+
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 DB_FILE="database.db"
-
-def db_connect():
-    db = sqlite3.connect(DB_FILE, check_same_thread=False)
-    return db
-#c = db.cursor()
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
 
@@ -38,17 +34,17 @@ def bird():
 def home():
     if 'username' in session:
         user = session['username']
-        print(c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)))
-        pokedata = c.execute("SELECT * FROM poke_stats WHERE username=?", (user,)).fetchone()
-        catdata = c.execute("SELECT * FROM cat_stats WHERE username=?", (user,)).fetchone()
-        birddata = c.execute("SELECT * FROM bird_stats WHERE username=?", (user,)).fetchone()
+        user_data = (
+            ("Pokemon",) + c.execute("SELECT wins, last_daily, daily_streak FROM poke_stats WHERE username=?", (user,)).fetchone(),
+            ("Cat",) + c.execute("SELECT wins, last_daily, daily_streak FROM cat_stats WHERE username=?", (user,)).fetchone(),
+            ("Bird",) + c.execute("SELECT wins, last_daily, daily_streak FROM bird_stats WHERE username=?", (user,)).fetchone()
+        )
+        print(user_data)
     else:
+        user_data = None
         user = "Guest"
-        pokedata = None
-        catdata = None
-        birddata = None
 
-    return render_template("home.html", user = user, pokedata = pokedata, catdata = catdata, birddata = birddata)
+    return render_template("home.html", user = user , user_data = user_data)
 
 @app.route("/login", methods=['GET','POST'])
 def login():
