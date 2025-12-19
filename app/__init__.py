@@ -18,6 +18,30 @@ DB_FILE="database.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
 
+FALLBACK_POKEMON = [
+    {'name': 'pikachu', 'type_one': 'electric', 'type_two': 'No Type', 'height': 4, 'weight': 60, 'generation': 1},
+    {'name': 'charizard', 'type_one': 'fire', 'type_two': 'flying', 'height': 17, 'weight': 905, 'generation': 1},
+    {'name': 'bulbasaur', 'type_one': 'grass', 'type_two': 'poison', 'height': 7, 'weight': 69, 'generation': 1},
+    {'name': 'squirtle', 'type_one': 'water', 'type_two': 'No Type', 'height': 5, 'weight': 90, 'generation': 1},
+    {'name': 'jigglypuff', 'type_one': 'normal', 'type_two': 'fairy', 'height': 5, 'weight': 55, 'generation': 1}
+]
+
+FALLBACK_CATS = [
+    {'name': 'Abyssinian', 'origin': 'Egypt', 'life_span': 15, 'intelligence': 5, 'social_needs': 5, 'weight_max': 10},
+    {'name': 'Siamese', 'origin': 'Thailand', 'life_span': 15, 'intelligence': 5, 'social_needs': 5, 'weight_max': 15},
+    {'name': 'Maine Coon', 'origin': 'United States', 'life_span': 14, 'intelligence': 4, 'social_needs': 4, 'weight_max': 18},
+    {'name': 'Persian', 'origin': 'Iran (Persia)', 'life_span': 15, 'intelligence': 3, 'social_needs': 2, 'weight_max': 12},
+    {'name': 'Ragdoll', 'origin': 'United States', 'life_span': 17, 'intelligence': 4, 'social_needs': 5, 'weight_max': 20}
+]
+
+FALLBACK_BIRDS = [
+    {'name': 'Bald Eagle', 'family': 'Accipitridae', 'order': 'Accipitriformes', 'wingspan_min': 180, 'wingspan_max': 230, 'length': 102},
+    {'name': 'Peregrine Falcon', 'family': 'Falconidae', 'order': 'Falconiformes', 'wingspan_min': 74, 'wingspan_max': 120, 'length': 58},
+    {'name': 'Blue Jay', 'family': 'Corvidae', 'order': 'Passeriformes', 'wingspan_min': 34, 'wingspan_max': 43, 'length': 30},
+    {'name': 'Northern Cardinal', 'family': 'Cardinalidae', 'order': 'Passeriformes', 'wingspan_min': 25, 'wingspan_max': 31, 'length': 23},
+    {'name': 'Great Horned Owl', 'family': 'Strigidae', 'order': 'Strigiformes', 'wingspan_min': 101, 'wingspan_max': 145, 'length': 63}
+]
+
 @app.route("/poke", methods=['GET', 'POST'])
 def poke():
     return render_template("poke.html")
