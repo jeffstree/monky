@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS poke_info (
     generation INTEGER
 )""")
 db.commmit()
+
 def key_load(key_name):
     try:
         key_path = os.path.join(os.path.dirname(__file__), "keys", f"key_{key_name}.txt")
