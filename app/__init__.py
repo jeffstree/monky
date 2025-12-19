@@ -6,12 +6,16 @@ import datetime
 import sys
 import random
 from build_db import query_cat, query_bird, query_pokemon
-import datetime
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 DB_FILE="database.db"
+
+def db_connect():
+    db = sqlite3.connect(DB_FILE, check_same_thread=False)
+    return db
+#c = db.cursor()
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
 c.execute('CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT)')
@@ -113,97 +117,24 @@ def initialize_game_session(game_type):
 
     if target_key not in session:
         user = session['username']
-        db = get_db_connection()
-        c = db.cursor()
-        table_stats = {'poke': 'poke_stats', 'cat': 'cat_stats', 'bird': 'bird_stats'}[game_type]
-        c.execute(f'SELECT last_daily FROM {table_stats} WHERE username = ?', (user,))
-        row = c.fetchone()
-        db.close()
-        
-        last_daily = row['last_daily'] if row else None
-        
-        if last_daily != today:
-            session[target_key] = get_daily_target(game_type)
-            session[is_daily_key] = True
-        else:
-            session[target_key] = get_random_target(game_type)
-            session[is_daily_key] = False
-            
-        session[guesses_key] = []
-        session[won_key] = False
-
-def handle_win(game_type):
-    if not session.get(f'{game_type}_is_daily'):
-        return
-    
-    session[f'{game_type}_is_daily'] = False
-
-    user = session['username']
-    today = datetime.date.today()
-    today_iso = today.isoformat()
-    yesterday_iso = (today - datetime.timedelta(days=1)).isoformat()
-    
-    table_stats = {'poke': 'poke_stats', 'cat': 'cat_stats', 'bird': 'bird_stats'}[game_type]
-    
-    db = get_db_connection()
-    c = db.cursor()
-    c.execute(f'SELECT wins, last_daily, daily_streak FROM {table_stats} WHERE username = ?', (user,))
-    row = c.fetchone()
-    
-    if row:
-        wins = row['wins'] + 1
-        last_daily = row['last_daily']
-        streak = row['daily_streak']
-        
-        if last_daily == yesterday_iso:
-            streak += 1
-        else:
-            streak = 1
-            
-        c.execute(f'UPDATE {table_stats} SET wins = ?, last_daily = ?, daily_streak = ? WHERE username = ?',
-                  (wins, today_iso, streak, user))
-    
-    db.commit()
-    db.close()
-
-def get_db_connection():
-    db = sqlite3.connect(DB_FILE)
-    db.row_factory = sqlite3.Row
-    return db
-
-def check_numeric(guess_val, target_val):
-    if guess_val == target_val:
-        return 'match'
-    elif guess_val < target_val:
-        return 'Too low'
+        user_data = (
+            ("Pokemon",) + c.execute("SELECT wins, last_daily, daily_streak FROM poke_stats WHERE username=?", (user,)).fetchone(),
+            ("Cat",) + c.execute("SELECT wins, last_daily, daily_streak FROM cat_stats WHERE username=?", (user,)).fetchone(),
+            ("Bird",) + c.execute("SELECT wins, last_daily, daily_streak FROM bird_stats WHERE username=?", (user,)).fetchone()
+        )
+        print(user_data)
     else:
-        return 'Too high'
+        user_data = None
+        user = "Guest"
 
-def check_range(guess_val, target_min, target_max):
-    if target_min <= guess_val <= target_max:
-        return 'match'
-    elif guess_val < target_min:
-        return 'Too low'
-    else:
-        return 'Too high'
+    return render_template("home.html", user = user , user_data = user_data)
 
-@app.route('/')
-def home():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    
-    user = session['username']
-    db = get_db_connection()
-    c = db.cursor()
-    
-    games = [('Pokemon', 'poke_stats'), ('Cat', 'cat_stats'), ('Bird', 'bird_stats')]
-    user_data = []
-    
-    for game_name, table in games:
-        c.execute(f'SELECT wins, last_daily, daily_streak FROM {table} WHERE username = ?', (user,))
-        row = c.fetchone()
-        if row:
-            user_data.append((game_name, row['wins'], row['last_daily'], row['daily_streak']))
+@app.route("/login", methods=['GET','POST'])
+def login():
+    #if already logged in
+    if 'username' in session:
+        if request.referrer != None:
+            return redirect(request.referrer)
         else:
             user_data.append((game_name, 0, 'Never', 0))
             
