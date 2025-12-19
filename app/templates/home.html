@@ -8,41 +8,73 @@ Jiefeng Ou, Wesley Leon, Alexandru Cimpoiesu
 -->
 
 <html>
-   <head>
-     <title>title</title>
-     <script src ="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"> </script>
-   </head>
 
-   <body>
-     <p1> hi {{user}}</p1>
-     <a href="{{url_for('login')}}">Login</a>
-     <a href="{{url_for('register')}}">Register</a>
-     <a href="{{url_for('logout')}}">Logout</a>
-     <a href="{{url_for('poke')}}">poke</a>
-     <a href="{{url_for('cat')}}">cat</a>
-     <a href="{{url_for('bird')}}">bird</a>
+<head>
+  <title>Home</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"> </script>
+</head>
 
-     <table class="table-auto">
-      {% if user_data %}
-      <thead>
-        <tr>
-          <th>Game</th>
-          <th>Wins</th>
-          <th>Last Daily Won</th>
-          <th>Daily Streak</th>
-        </tr>
-      </thead>
-        {% for data in user_data %}
-        <tbody>
-          <tr>
-            <td>{{data[0]}}</td>
-            <td>{{data[1]}}</td>
-            <td>{{data[2]}}</td>
-            <td>{{data[3]}}</td>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+  <nav class="flex items-center justify-between flex-wrap bg-teal-500 p-6">
+    <div class="flex items-center flex-shrink-0 text-white mr-6">
+      <span class="font-semibold text-xl tracking-tight">Monky</span>
+    </div>
+    <div class="w-full block flex-grow lg:flex lg:items-center lg:w-auto">
+      <div class="text-sm lg:flex-grow">
+      </div>
+      <div>
+        <a href="{{url_for('logout')}}"
+          class="inline-block text-sm px-4 py-2 leading-none border rounded text-white border-white hover:border-transparent hover:text-teal-500 hover:bg-white mt-4 lg:mt-0">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto mt-10 p-5">
+    <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">Welcome, {{user}}!</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <a href="{{url_for('poke')}}"
+        class="block p-6 bg-white rounded-lg border border-gray-200 shadow-md hover:bg-gray-100 transition duration-200 text-center">
+        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">Pokemon</h5>
+        <p class="font-normal text-gray-700">Guess the Pokemon!</p>
+      </a>
+      <a href="{{url_for('cat')}}"
+        class="block p-6 bg-white rounded-lg border border-gray-200 shadow-md hover:bg-gray-100 transition duration-200 text-center">
+        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">Cat</h5>
+        <p class="font-normal text-gray-700">Guess the Cat Breed!</p>
+      </a>
+      <a href="{{url_for('bird')}}"
+        class="block p-6 bg-white rounded-lg border border-gray-200 shadow-md hover:bg-gray-100 transition duration-200 text-center">
+        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">Bird</h5>
+        <p class="font-normal text-gray-700">Guess the Bird!</p>
+      </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded my-6 overflow-x-auto">
+      <table class="min-w-full table-auto">
+        <thead>
+          <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+            <th class="py-3 px-6 text-left">Game</th>
+            <th class="py-3 px-6 text-center">Wins</th>
+            <th class="py-3 px-6 text-center">Last Daily Won</th>
+            <th class="py-3 px-6 text-center">Daily Streak</th>
           </tr>
+        </thead>
+        {% if user_data %}
+        <tbody class="text-gray-600 text-sm font-light">
+          {% for data in user_data %}
+          <tr class="border-b border-gray-200 hover:bg-gray-100">
+            <td class="py-3 px-6 text-left whitespace-nowrap font-bold">{{data[0]}}</td>
+            <td class="py-3 px-6 text-center">{{data[1]}}</td>
+            <td class="py-3 px-6 text-center">{{data[2]}}</td>
+            <td class="py-3 px-6 text-center">{{data[3]}}</td>
+          </tr>
+          {% endfor %}
         </tbody>
-        {% endfor %}
-      {% endif %}
-     </table>
-   </body>
- </html>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</body>
+
+</html>

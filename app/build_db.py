@@ -13,6 +13,7 @@ import os
 DB_FILE="database.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
+
 #==========================================================
 #SQLITE3 DATABASE LIES BENEATH HERE
 #==========================================================
