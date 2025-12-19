@@ -19,6 +19,11 @@ app.secret_key = os.urandom(24)
 DB_FILE="database.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
+c.execute('CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT)')
+c.execute('CREATE TABLE IF NOT EXISTS poke_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
+c.execute('CREATE TABLE IF NOT EXISTS cat_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
+c.execute('CREATE TABLE IF NOT EXISTS bird_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
+db.commit()
 
 @app.route("/poke", methods=['GET', 'POST'])
 def poke():
@@ -361,98 +366,6 @@ def pokemon_game():
             feedback = "not "
     return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
 
-
-#==========================================================
-#SQLITE3 DATABASE LIES BENEATH HERE
-#==========================================================
-
-'''users (username, password)'''
-c.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    username TEXT PRIMARY KEY,
-    password TEXT
-)""")
-
-'''poke_stats (username, wins, last_daily, daily_streak)'''
-c.execute("""
-CREATE TABLE IF NOT EXISTS poke_stats (
-    username TEXT,
-    wins INTEGER,
-    last_daily DATE,
-    daily_streak INTEGER,
-    FOREIGN KEY (username) REFERENCES users(username)
-)""")
-
-'''cat_stats (username, wins, last_daily, daily_streak)'''
-c.execute("""
-CREATE TABLE IF NOT EXISTS cat_stats (
-    username TEXT,
-    wins INTEGER,
-    last_daily DATE,
-    daily_streak INTEGER,
-    FOREIGN KEY (username) REFERENCES users(username)
-)""")
-
-'''bird_stats (username, wins, last_daily, daily_streak)'''
-c.execute("""
-CREATE TABLE IF NOT EXISTS bird_stats (
-    username TEXT,
-    wins INTEGER,
-    last_daily DATE,
-    daily_streak INTEGER,
-    FOREIGN KEY (username) REFERENCES users(username)
-)""")
-
-'''bird_info (id, name, family, order, status, wingspan_min, wingspan_max, length_min, length_max)'''
-c.execute("""
-CREATE TABLE IF NOT EXISTS bird_info (
-    id INTEGER PRIMARY KEY,
-    name TEXT,
-    family TEXT,
-    "order" TEXT,
-    status TEXT,
-    wingspan_min INTEGER,
-    wingspan_max INTEGER,
-    length_min INTEGER,
-    length_max INTEGER
-)""")
-
-'''
-cat_info(id, name, origin, life_span, intelligence, social_needs, weight_min, weight_max)
-Cat returns "weight":{"imperial":"7  -  10","metric":"3 - 5"}, extract the imperial and use the upper and lower as weight min and max.
-Cat returns "life_span":"14 - 15", use upper value
-'''
-c.execute("""
-CREATE TABLE IF NOT EXISTS cat_info (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    origin TEXT,
-    life_span INTEGER,
-    intelligence INTEGER,
-    social_needs INTEGER,
-    weight_min INTEGER,
-    weight_max INTEGER
-)""")
-
-'''poke_info(id, name, type_one, type_two, height, weight, generation)'''
-c.execute("""
-CREATE TABLE IF NOT EXISTS poke_info (
-    id INTEGER PRIMARY KEY,
-    name TEXT,
-    type_one TEXT,
-    type_two TEXT,
-    height INTEGER,
-    weight INTEGER,
-    generation INTEGER
-)""")
-
-# Height and Weight are divided by 10
-# Generation is returned as
-
-# name:"generation-iv"
-# url:"https://pokeapi.co/api/v2/generation/4/"
-
-# need to grab the generation number from the url.
 
 
 #==========================================================
