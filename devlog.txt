@@ -50,7 +50,8 @@ alexandruC -- 2025-12-11 10:41
   docstrings though because they arent that descriptive
 
 wesleyL -- 2025-12-10 11:00
-      - added databases for the apis
+  - added databases for the apis
+
 jiefengO -- 2025-12-11 11:00
   - Added data to home screen, not yet formatted
   - Added extra username checks
@@ -64,8 +65,9 @@ alexandruC -- 2025-12-11 9:38
 
 alexandruC -- 2025-12-11 10:00
   - route for pokemon game made
+
 wesleyL -- 2025-12-11 11:00
-      - added code to populate nutatch database
+  - added code to populate nutatch database
 
 jiefengO -- 2025-12-12 11:00
   - Added unfinished code for home
@@ -76,8 +78,8 @@ alexandruC -- 2025-12-15 10:43
 jiefengO -- 2025-12-15 11:00
   - Added pokemon data to database (very very slow)
 
-  alexandruC -- 2025-12-15 10:47
-    - Links from html pages to others
+alexandruC -- 2025-12-15 10:47
+  - Links from html pages to others
 
 jiefengO -- 2025-12-16 11:00
   - Thought about code to make pokemon parser faster (aka code does not work at all)
@@ -90,4 +92,9 @@ alexandruC -- 2025-12-18 7:18
   - cleaned page of poke page that I forgot to commit and push (tw!)
 
 wesleyL -- 2025-12-18 11:00
- - added database query methods
+  - added database query methods
+
+jiefengO -- 2025-12-18 9:00
+  DD REVISION: 
+  Changed component map to include build_db.py, which builds the database before the presentation
+  Added second database map that shows the API info stored 
