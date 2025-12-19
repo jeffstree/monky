@@ -9,18 +9,23 @@ import time
 import random
 import urllib
 import json
+import os
 DB_FILE="database.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
 
-'''bird_info (id, name, family, order, status, wingspan_min, wingspan_max, length_min, length_max)'''
+#==========================================================
+#SQLITE3 DATABASE LIES BENEATH HERE
+#==========================================================
+
+
+'''bird_info (id, name, family, order, wingspan_min, wingspan_max, length_min, length_max)'''
 c.execute("""
 CREATE TABLE IF NOT EXISTS bird_info (
     id INTEGER PRIMARY KEY,
     name TEXT,
     family TEXT,
     "order" TEXT,
-    status TEXT,
     wingspan_min INTEGER,
     wingspan_max INTEGER,
     length_min INTEGER,
@@ -55,7 +60,7 @@ CREATE TABLE IF NOT EXISTS poke_info (
     weight INTEGER,
     generation INTEGER
 )""")
-db.commmit()
+db.commit()
 
 def key_load(key_name):
     try:
@@ -118,7 +123,6 @@ def fetch_bird_data():
     """
     data_to_insert = []
     for bird in birds_data:
-        print(bird)
         record = (
             bird.get("id"),
             bird.get("name"),
@@ -138,8 +142,7 @@ def fetch_bird_data():
         print(f"\nSuccessfully inserted/updated {len(data_to_insert)} bird records.")
     except sqlite3.Error as e:
         print(f"An SQLite error occurred: {e}")
-    finally:
-        db.close()
+
 
 def fetch_cat_data():
     cat_key = key_load("TheCatAPI")
@@ -175,7 +178,6 @@ def fetch_cat_data():
     """
     data_to_insert = []
     for cat in cat_data:
-        print(cat)
         life_span_upper = int(cat.get("life_span", "0 - 0").split(" - ")[1].strip())
         imperial_weight_str = cat.get("weight", {}).get("imperial", "0 - 0")
         weight_parts = [part.strip() for part in imperial_weight_str.split(" - ")]
@@ -200,8 +202,7 @@ def fetch_cat_data():
         print(f"\nSuccessfully inserted/updated {len(data_to_insert)} cat records.")
     except sqlite3.Error as e:
         print(f"An SQLite error occurred: {e}")
-    finally:
-        db.close()
+
 
 def fetch_poke_data():
     poke_data = []
@@ -233,12 +234,12 @@ def fetch_poke_data():
         print(f"\nSuccessfully inserted/updated {len(poke_data)} pokemon records.")
     except sqlite3.Error as e:
         print(f"An SQLite error occurred: {e}")
-    finally:
-        db.close()
+
 def fetch_all():
     fetch_poke_data()
-    #fetch_bird_data()
-    #fetch_cat_data()
+    fetch_bird_data()
+    fetch_cat_data()
+    db.close()
     print("Finished Fetching")
 
 def query_pokemon(name):
