@@ -70,21 +70,48 @@ def get_daily_target(game_type):
     fallbacks = {'poke': FALLBACK_POKEMON, 'cat': FALLBACK_CATS, 'bird': FALLBACK_BIRDS}
     return r.choice(fallbacks[game_type])
 
-@app.route("/poke", methods=['GET', 'POST'])
-def poke():
-    return render_template("poke.html")
+def get_random_target(game_type):
+    table_map = {'poke': 'poke_info', 'cat': 'cat_info', 'bird': 'bird_info'}
+    table = table_map[game_type]
+    
+    db = get_db_connection()
+    c = db.cursor()
+    try:
+        c.execute(f'SELECT * FROM {table} ORDER BY RANDOM() LIMIT 1')
+        row = c.fetchone()
+        if row:
+            return dict(row)
+    except Exception:
+        pass
+    finally:
+        db.close()
+        
+    fallbacks = {'poke': FALLBACK_POKEMON, 'cat': FALLBACK_CATS, 'bird': FALLBACK_BIRDS}
+    return random.choice(fallbacks[game_type])
 
-@app.route("/cat", methods=['GET', 'POST'])
-def cat():
-    return render_template("cat.html")
 
-@app.route("/bird", methods=['GET', 'POST'])
-def bird():
-    return render_template("bird.html")
+def initialize_game_session(game_type):
+    if 'username' not in session:
+        return
+    
+    today = datetime.date.today().isoformat()
 
-@app.route("/")
-def home():
-    if 'username' in session:
+    if session.get('session_day') != today:
+        keys_to_reset = [
+            'poke_target', 'poke_guesses', 'poke_won', 'poke_is_daily',
+            'cat_target', 'cat_guesses', 'cat_won', 'cat_is_daily',
+            'bird_target', 'bird_guesses', 'bird_won', 'bird_is_daily'
+        ]
+        for k in keys_to_reset:
+            session.pop(k, None)
+        session['session_day'] = today
+
+    target_key = f'{game_type}_target'
+    is_daily_key = f'{game_type}_is_daily'
+    won_key = f'{game_type}_won'
+    guesses_key = f'{game_type}_guesses'
+
+    if target_key not in session:
         user = session['username']
         db = get_db_connection()
         c = db.cursor()
@@ -139,26 +166,10 @@ def handle_win(game_type):
     db.commit()
     db.close()
 
-
-
-
 def get_db_connection():
     db = sqlite3.connect(DB_FILE)
     db.row_factory = sqlite3.Row
     return db
-
-def init_tables():
-    db = get_db_connection()
-    c = db.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT)')
-    c.execute('CREATE TABLE IF NOT EXISTS poke_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
-    c.execute('CREATE TABLE IF NOT EXISTS cat_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
-    c.execute('CREATE TABLE IF NOT EXISTS bird_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
-    
-    db.commit()
-    db.close()
-
-
 
 def check_numeric(guess_val, target_val):
     if guess_val == target_val:
@@ -175,9 +186,6 @@ def check_range(guess_val, target_min, target_max):
         return 'Too low'
     else:
         return 'Too high'
-
-
-init_tables()
 
 @app.route('/')
 def home():
@@ -429,14 +437,6 @@ def bird_game():
         
     return redirect(url_for('bird'))
 
-
-
-
-#==========================================================
-#SQLITE3 DATABASE LIES ABOVE HERE
-#==========================================================
-
-db.commit() #save changes
 
 if __name__ == "__main__": #false if this file imported as module
     app.debug = True  #enable PSOD, auto-server-restart on code chg
