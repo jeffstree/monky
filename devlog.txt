@@ -95,9 +95,12 @@ wesleyL -- 2025-12-18 11:00
   - added database query methods
 
 jiefengO -- 2025-12-18 9:00
-  DD REVISION: 
+  DD REVISION:
   Changed component map to include build_db.py, which builds the database before the presentation
-  Added second database map that shows the API info stored 
+  Added second database map that shows the API info stored
 
 jiefengO -- 2025-12-18 9:50
   - Added table to home
+
+wesleyL -- 2025-12-19 11:00
+    - updated database and init  to change db creation method

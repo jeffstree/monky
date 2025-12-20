@@ -294,62 +294,124 @@ def pokemon_game():
         else:
             feedback = "not "
     return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
+    
+@app.route('/cat')
+def cat():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    initialize_game_session('cat')
+    
+    guesses = session.get('cat_guesses', [])
+    won = session.get('cat_won', False)
+    target = session.get('cat_target')
+    
+    return render_template('cat.html', guesses=reversed(guesses), won=won, target=target)
 
-@app.route("/cat_game", methods=['GET', 'POST'])
+
+@app.route('/cat_game', methods=['POST'])
 def cat_game():
-    target_pokemon = query_cat("pikachu")
-    win = False
-    if request.method == "POST":
-        guess = request.form['guess'].lower().strip()
-        stats = query_pokemon(guess)
-        print(stats)
-        print("-------------------")
-        print(target_pokemon)
-        if stats:
-            if stats[1] == target_pokemon[1]:
-                win = True
-            feedback = {
-                "name": stats[1],
-                "type_one": "match" if stats[2] == target_pokemon[2] else "no",
-                "type_two": "match" if stats[3] == target_pokemon[3] else "no",
-                "height": "match" if stats[4] == target_pokemon[4] else
-                    ("higher" if target_pokemon[4] > stats[4] else "lower"),
-                "weight": "match" if stats[5] == target_pokemon[5] else
-                    ("higher" if target_pokemon[5] > stats[5] else "lower"),
-                "generation": "match" if stats[6] == target_pokemon[6] else
-                    ("higher" if target_pokemon[6] > stats[6] else "lower")
-            }
-        else:
-            feedback = "not "
-    return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
+    if 'username' not in session:
+        return redirect(url_for('login'))
+        
+    guess_name = request.form['guess'].strip()
+    
+    if 'cat_target' not in session:
+        return redirect(url_for('cat'))
 
-@app.route("/bird_game", methods=['GET', 'POST'])
+    target = session['cat_target']
+
+    guessed_data = build_db.query_cat(guess_name)
+    if not guessed_data:
+        flash('Cat breed not found!')
+        return redirect(url_for('cat'))
+
+    guessed_stats = {
+        'name': guessed_data[1],
+        'origin': guessed_data[2],
+        'life_span': guessed_data[3],
+        'intelligence': guessed_data[4],
+        'social_needs': guessed_data[5],
+        'weight_max': guessed_data[7]
+    }
+    
+    feedback = {
+        'name': {'val': guessed_stats['name'], 'status': 'match'},
+        'origin': {'val': guessed_stats['origin'], 'status': 'match' if guessed_stats['origin'] == target['origin'] else 'no_match'},
+        'life_span': {'val': guessed_stats['life_span'], 'status': check_numeric(guessed_stats['life_span'], target['life_span'])},
+        'intelligence': {'val': guessed_stats['intelligence'], 'status': check_numeric(guessed_stats['intelligence'], target['intelligence'])},
+        'social_needs': {'val': guessed_stats['social_needs'], 'status': check_numeric(guessed_stats['social_needs'], target['social_needs'])},
+        'weight_max': {'val': guessed_stats['weight_max'], 'status': check_numeric(guessed_stats['weight_max'], target['weight_max'])}
+    }
+    
+    guesses = session.get('cat_guesses', [])
+    guesses.append(feedback)
+    session['cat_guesses'] = guesses
+    
+    if guessed_stats['name'] == target['name']:
+        session['cat_won'] = True
+        handle_win('cat')
+        
+    return redirect(url_for('cat'))
+
+
+@app.route('/bird')
+def bird():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    initialize_game_session('bird')
+    
+    guesses = session.get('bird_guesses', [])
+    won = session.get('bird_won', False)
+    target = session.get('bird_target')
+    
+    return render_template('bird.html', guesses=reversed(guesses), won=won, target=target)
+
+
+@app.route('/bird_game', methods=['POST'])
 def bird_game():
-    target_pokemon = query_bird("pikachu")
-    win = False
-    if request.method == "POST":
-        guess = request.form['guess'].lower().strip()
-        stats = query_pokemon(guess)
-        print(stats)
-        print("-------------------")
-        print(target_pokemon)
-        if stats:
-            if stats[1] == target_pokemon[1]:
-                win = True
-            feedback = {
-                "name": stats[1],
-                "type_one": "match" if stats[2] == target_pokemon[2] else "no",
-                "type_two": "match" if stats[3] == target_pokemon[3] else "no",
-                "height": "match" if stats[4] == target_pokemon[4] else
-                    ("higher" if target_pokemon[4] > stats[4] else "lower"),
-                "weight": "match" if stats[5] == target_pokemon[5] else
-                    ("higher" if target_pokemon[5] > stats[5] else "lower"),
-                "generation": "match" if stats[6] == target_pokemon[6] else
-                    ("higher" if target_pokemon[6] > stats[6] else "lower")
-            }
-        else:
-            feedback = "not "
-    return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
+    if 'username' not in session:
+        return redirect(url_for('login'))
+        
+    guess_name = request.form['guess'].strip()
+    
+    if 'bird_target' not in session:
+        return redirect(url_for('bird'))
+
+    target = session['bird_target']
+
+    guessed_data = build_db.query_bird(guess_name)
+    if not guessed_data:
+        flash('Bird not found!')
+        return redirect(url_for('bird'))
+
+    guessed_stats = {
+        'name': guessed_data[1],
+        'family': guessed_data[2],
+        'order': guessed_data[3],
+        'wingspan': guessed_data[5],
+        'length': guessed_data[7]
+    }
+    
+    feedback = {
+        'name': {'val': guessed_stats['name'], 'status': 'match'},
+        'family': {'val': guessed_stats['family'], 'status': 'match' if guessed_stats['family'] == target['family'] else 'no_match'},
+        'order': {'val': guessed_stats['order'], 'status': 'match' if guessed_stats['order'] == target['order'] else 'no_match'},
+        'wingspan': {'val': guessed_stats['wingspan'], 'status': check_range(guessed_stats['wingspan'], target['wingspan_min'], target['wingspan_max'])},
+        'length': {'val': guessed_stats['length'], 'status': check_numeric(guessed_stats['length'], target['length'])}
+    }
+    
+    guesses = session.get('bird_guesses', [])
+    guesses.append(feedback)
+    session['bird_guesses'] = guesses
+    
+    if guessed_stats['name'] == target['name']:
+        session['bird_won'] = True
+        handle_win('bird')
+        
+    return redirect(url_for('bird'))
+
 
 
 
