@@ -267,34 +267,51 @@ def poke():
     return render_template('poke.html', guesses=reversed(guesses), won=won, target=target)
 
 
-@app.route("/poke_game", methods=['GET', 'POST'])
+@app.route('/pokemon_game', methods=['POST'])
 def pokemon_game():
-    target_pokemon = query_pokemon("pikachu")
-    win = False
-    if request.method == "POST":
-        guess = request.form['guess'].lower().strip()
-        stats = query_pokemon(guess)
-        print(stats)
-        print("-------------------")
-        print(target_pokemon)
-        if stats:
-            if stats[1] == target_pokemon[1]:
-                win = True
-            feedback = {
-                "name": stats[1],
-                "type_one": "match" if stats[2] == target_pokemon[2] else "no",
-                "type_two": "match" if stats[3] == target_pokemon[3] else "no",
-                "height": "match" if stats[4] == target_pokemon[4] else
-                    ("higher" if target_pokemon[4] > stats[4] else "lower"),
-                "weight": "match" if stats[5] == target_pokemon[5] else
-                    ("higher" if target_pokemon[5] > stats[5] else "lower"),
-                "generation": "match" if stats[6] == target_pokemon[6] else
-                    ("higher" if target_pokemon[6] > stats[6] else "lower")
-            }
-        else:
-            feedback = "not "
-    return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
+    if 'username' not in session:
+        return redirect(url_for('login'))
+        
+    guess_name = request.form['guess'].lower().strip()
     
+    if 'poke_target' not in session:
+        return redirect(url_for('poke'))
+
+    target = session['poke_target']
+
+    guessed_data = build_db.query_pokemon(guess_name)
+    if not guessed_data:
+        flash('Pokemon not found!')
+        return redirect(url_for('poke'))
+
+    guessed_stats = {
+        'name': guessed_data[1],
+        'type_one': guessed_data[2],
+        'type_two': guessed_data[3],
+        'height': guessed_data[4],
+        'weight': guessed_data[5],
+        'generation': guessed_data[6]
+    }
+    
+    feedback = {
+        'name': {'val': guessed_stats['name'], 'status': 'match'},
+        'type_one': {'val': guessed_stats['type_one'], 'status': 'match' if guessed_stats['type_one'] == target['type_one'] else 'no_match'},
+        'type_two': {'val': guessed_stats['type_two'], 'status': 'match' if guessed_stats['type_two'] == target['type_two'] else 'no_match'},
+        'height': {'val': guessed_stats['height'], 'status': check_numeric(guessed_stats['height'], target['height'])},
+        'weight': {'val': guessed_stats['weight'], 'status': check_numeric(guessed_stats['weight'], target['weight'])},
+        'generation': {'val': guessed_stats['generation'], 'status': check_numeric(guessed_stats['generation'], target['generation'])}
+    }
+    
+    guesses = session.get('poke_guesses', [])
+    guesses.append(feedback)
+    session['poke_guesses'] = guesses
+    
+    if guessed_stats['name'] == target['name']:
+        session['poke_won'] = True
+        handle_win('poke')
+        
+    return redirect(url_for('poke'))
+
 @app.route('/cat')
 def cat():
     if 'username' not in session:
