@@ -5,11 +5,20 @@ import os
 import datetime
 import sys
 import random
-import build_db
+from build_db import query_cat, query_bird, query_pokemon
+import datetime
 
 app = Flask(__name__)
-app.secret_key = os.urandom(32)
-DB_FILE = 'database.db'
+app.secret_key = os.urandom(24)
+
+DB_FILE="database.db"
+db = sqlite3.connect(DB_FILE, check_same_thread=False)
+c = db.cursor()
+c.execute('CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT)')
+c.execute('CREATE TABLE IF NOT EXISTS poke_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
+c.execute('CREATE TABLE IF NOT EXISTS cat_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
+c.execute('CREATE TABLE IF NOT EXISTS bird_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
+db.commit()
 
 FALLBACK_POKEMON = [
     {'name': 'pikachu', 'type_one': 'electric', 'type_two': 'No Type', 'height': 4, 'weight': 60, 'generation': 1},
@@ -39,12 +48,12 @@ def get_daily_target(game_type):
     today = datetime.date.today()
     seed = today.year * 10000 + today.month * 100 + today.day
     r = random.Random(seed)
-    
+
     table_map = {'poke': 'poke_info', 'cat': 'cat_info', 'bird': 'bird_info'}
     table = table_map[game_type]
     
-    conn = get_db_connection()
-    c = conn.cursor()
+    db = get_db_connection()
+    c = db.cursor()
     try:
         c.execute(f'SELECT count(*) FROM {table}')
         total = c.fetchone()[0]
@@ -56,60 +65,33 @@ def get_daily_target(game_type):
     except Exception:
         pass
     finally:
-        conn.close()
-        
+        db.close()
+
     fallbacks = {'poke': FALLBACK_POKEMON, 'cat': FALLBACK_CATS, 'bird': FALLBACK_BIRDS}
     return r.choice(fallbacks[game_type])
 
-def get_random_target(game_type):
-    table_map = {'poke': 'poke_info', 'cat': 'cat_info', 'bird': 'bird_info'}
-    table = table_map[game_type]
-    
-    conn = get_db_connection()
-    c = conn.cursor()
-    try:
-        c.execute(f'SELECT * FROM {table} ORDER BY RANDOM() LIMIT 1')
-        row = c.fetchone()
-        if row:
-            return dict(row)
-    except Exception:
-        pass
-    finally:
-        conn.close()
-        
-    fallbacks = {'poke': FALLBACK_POKEMON, 'cat': FALLBACK_CATS, 'bird': FALLBACK_BIRDS}
-    return random.choice(fallbacks[game_type])
+@app.route("/poke", methods=['GET', 'POST'])
+def poke():
+    return render_template("poke.html")
 
+@app.route("/cat", methods=['GET', 'POST'])
+def cat():
+    return render_template("cat.html")
 
-def initialize_game_session(game_type):
-    if 'username' not in session:
-        return
-    
-    today = datetime.date.today().isoformat()
-    # If the day has changed globally for the session, reset everything
-    if session.get('session_day') != today:
-        keys_to_reset = [
-            'poke_target', 'poke_guesses', 'poke_won', 'poke_is_daily',
-            'cat_target', 'cat_guesses', 'cat_won', 'cat_is_daily',
-            'bird_target', 'bird_guesses', 'bird_won', 'bird_is_daily'
-        ]
-        for k in keys_to_reset:
-            session.pop(k, None)
-        session['session_day'] = today
+@app.route("/bird", methods=['GET', 'POST'])
+def bird():
+    return render_template("bird.html")
 
-    target_key = f'{game_type}_target'
-    is_daily_key = f'{game_type}_is_daily'
-    won_key = f'{game_type}_won'
-    guesses_key = f'{game_type}_guesses'
-
-    if target_key not in session:
+@app.route("/")
+def home():
+    if 'username' in session:
         user = session['username']
-        conn = get_db_connection()
-        c = conn.cursor()
+        db = get_db_connection()
+        c = db.cursor()
         table_stats = {'poke': 'poke_stats', 'cat': 'cat_stats', 'bird': 'bird_stats'}[game_type]
         c.execute(f'SELECT last_daily FROM {table_stats} WHERE username = ?', (user,))
         row = c.fetchone()
-        conn.close()
+        db.close()
         
         last_daily = row['last_daily'] if row else None
         
@@ -136,8 +118,8 @@ def handle_win(game_type):
     
     table_stats = {'poke': 'poke_stats', 'cat': 'cat_stats', 'bird': 'bird_stats'}[game_type]
     
-    conn = get_db_connection()
-    c = conn.cursor()
+    db = get_db_connection()
+    c = db.cursor()
     c.execute(f'SELECT wins, last_daily, daily_streak FROM {table_stats} WHERE username = ?', (user,))
     row = c.fetchone()
     
@@ -154,27 +136,27 @@ def handle_win(game_type):
         c.execute(f'UPDATE {table_stats} SET wins = ?, last_daily = ?, daily_streak = ? WHERE username = ?',
                   (wins, today_iso, streak, user))
     
-    conn.commit()
-    conn.close()
+    db.commit()
+    db.close()
 
 
 
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    db = sqlite3.connect(DB_FILE)
+    db.row_factory = sqlite3.Row
+    return db
 
 def init_tables():
-    conn = get_db_connection()
-    c = conn.cursor()
+    db = get_db_connection()
+    c = db.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS poke_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
     c.execute('CREATE TABLE IF NOT EXISTS cat_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
     c.execute('CREATE TABLE IF NOT EXISTS bird_stats (username TEXT REFERENCES users(username), wins INTEGER, last_daily DATE, daily_streak INTEGER)')
     
-    conn.commit()
-    conn.close()
+    db.commit()
+    db.close()
 
 
 
@@ -203,8 +185,8 @@ def home():
         return redirect(url_for('login'))
     
     user = session['username']
-    conn = get_db_connection()
-    c = conn.cursor()
+    db = get_db_connection()
+    c = db.cursor()
     
     games = [('Pokemon', 'poke_stats'), ('Cat', 'cat_stats'), ('Bird', 'bird_stats')]
     user_data = []
@@ -217,7 +199,7 @@ def home():
         else:
             user_data.append((game_name, 0, 'Never', 0))
             
-    conn.close()
+    db.close()
     return render_template('home.html', user=user, user_data=user_data)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -226,11 +208,11 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        conn = get_db_connection()
-        c = conn.cursor()
+        db = get_db_connection()
+        c = db.cursor()
         c.execute('SELECT * FROM users WHERE username = ?', (username,))
         user = c.fetchone()
-        conn.close()
+        db.close()
         
         if user and user['password'] == password:
             session['username'] = username
@@ -247,20 +229,20 @@ def register():
         username = request.form['username']
         password = request.form['password']
         
-        conn = get_db_connection()
-        c = conn.cursor()
+        db = get_db_connection()
+        c = db.cursor()
         try:
             c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, password))
-            conn.commit()
+            db.commit()
             c.execute('INSERT INTO poke_stats (username, wins, last_daily, daily_streak) VALUES (?, 0, NULL, 0)', (username,))
             c.execute('INSERT INTO cat_stats (username, wins, last_daily, daily_streak) VALUES (?, 0, NULL, 0)', (username,))
             c.execute('INSERT INTO bird_stats (username, wins, last_daily, daily_streak) VALUES (?, 0, NULL, 0)', (username,))
-            conn.commit()
-            conn.close()
+            db.commit()
+            db.close()
             flash('Registration successful')
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
-            conn.close()
+            db.close()
             flash('Username already exists')
             return redirect(url_for('register'))
             
@@ -285,215 +267,98 @@ def poke():
     return render_template('poke.html', guesses=reversed(guesses), won=won, target=target)
 
 
-@app.route('/pokemon_game', methods=['POST'])
+@app.route("/poke_game", methods=['GET', 'POST'])
 def pokemon_game():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-        
-    guess_name = request.form['guess'].lower().strip()
-    
-    if 'poke_target' not in session:
-        return redirect(url_for('poke'))
+    target_pokemon = query_pokemon("pikachu")
+    win = False
+    if request.method == "POST":
+        guess = request.form['guess'].lower().strip()
+        stats = query_pokemon(guess)
+        print(stats)
+        print("-------------------")
+        print(target_pokemon)
+        if stats:
+            if stats[1] == target_pokemon[1]:
+                win = True
+            feedback = {
+                "name": stats[1],
+                "type_one": "match" if stats[2] == target_pokemon[2] else "no",
+                "type_two": "match" if stats[3] == target_pokemon[3] else "no",
+                "height": "match" if stats[4] == target_pokemon[4] else
+                    ("higher" if target_pokemon[4] > stats[4] else "lower"),
+                "weight": "match" if stats[5] == target_pokemon[5] else
+                    ("higher" if target_pokemon[5] > stats[5] else "lower"),
+                "generation": "match" if stats[6] == target_pokemon[6] else
+                    ("higher" if target_pokemon[6] > stats[6] else "lower")
+            }
+        else:
+            feedback = "not "
+    return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
 
-    target = session['poke_target']
-
-    guessed_data = build_db.query_pokemon(guess_name)
-    if not guessed_data:
-        flash('Pokemon not found!')
-        return redirect(url_for('poke'))
-
-    guessed_stats = {
-        'name': guessed_data[1],
-        'type_one': guessed_data[2],
-        'type_two': guessed_data[3],
-        'height': guessed_data[4],
-        'weight': guessed_data[5],
-        'generation': guessed_data[6]
-    }
-    
-    feedback = {
-        'name': {'val': guessed_stats['name'], 'status': 'match'},
-        'type_one': {'val': guessed_stats['type_one'], 'status': 'match' if guessed_stats['type_one'] == target['type_one'] else 'no_match'},
-        'type_two': {'val': guessed_stats['type_two'], 'status': 'match' if guessed_stats['type_two'] == target['type_two'] else 'no_match'},
-        'height': {'val': guessed_stats['height'], 'status': check_numeric(guessed_stats['height'], target['height'])},
-        'weight': {'val': guessed_stats['weight'], 'status': check_numeric(guessed_stats['weight'], target['weight'])},
-        'generation': {'val': guessed_stats['generation'], 'status': check_numeric(guessed_stats['generation'], target['generation'])}
-    }
-    
-    guesses = session.get('poke_guesses', [])
-    guesses.append(feedback)
-    session['poke_guesses'] = guesses
-    
-    if guessed_stats['name'] == target['name']:
-        session['poke_won'] = True
-        handle_win('poke')
-        
-    return redirect(url_for('poke'))
-
-
-
-@app.route('/cat')
-def cat():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    
-    initialize_game_session('cat')
-    
-    guesses = session.get('cat_guesses', [])
-    won = session.get('cat_won', False)
-    target = session.get('cat_target')
-    
-    return render_template('cat.html', guesses=reversed(guesses), won=won, target=target)
-
-
-@app.route('/cat_game', methods=['POST'])
+@app.route("/cat_game", methods=['GET', 'POST'])
 def cat_game():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-        
-    guess_name = request.form['guess'].strip()
-    
-    if 'cat_target' not in session:
-        return redirect(url_for('cat'))
+    target_pokemon = query_cat("pikachu")
+    win = False
+    if request.method == "POST":
+        guess = request.form['guess'].lower().strip()
+        stats = query_pokemon(guess)
+        print(stats)
+        print("-------------------")
+        print(target_pokemon)
+        if stats:
+            if stats[1] == target_pokemon[1]:
+                win = True
+            feedback = {
+                "name": stats[1],
+                "type_one": "match" if stats[2] == target_pokemon[2] else "no",
+                "type_two": "match" if stats[3] == target_pokemon[3] else "no",
+                "height": "match" if stats[4] == target_pokemon[4] else
+                    ("higher" if target_pokemon[4] > stats[4] else "lower"),
+                "weight": "match" if stats[5] == target_pokemon[5] else
+                    ("higher" if target_pokemon[5] > stats[5] else "lower"),
+                "generation": "match" if stats[6] == target_pokemon[6] else
+                    ("higher" if target_pokemon[6] > stats[6] else "lower")
+            }
+        else:
+            feedback = "not "
+    return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
 
-    target = session['cat_target']
-
-    guessed_data = build_db.query_cat(guess_name)
-    if not guessed_data:
-        flash('Cat breed not found!')
-        return redirect(url_for('cat'))
-
-    guessed_stats = {
-        'name': guessed_data[1],
-        'origin': guessed_data[2],
-        'life_span': guessed_data[3],
-        'intelligence': guessed_data[4],
-        'social_needs': guessed_data[5],
-        'weight_max': guessed_data[7]
-    }
-    
-    feedback = {
-        'name': {'val': guessed_stats['name'], 'status': 'match'},
-        'origin': {'val': guessed_stats['origin'], 'status': 'match' if guessed_stats['origin'] == target['origin'] else 'no_match'},
-        'life_span': {'val': guessed_stats['life_span'], 'status': check_numeric(guessed_stats['life_span'], target['life_span'])},
-        'intelligence': {'val': guessed_stats['intelligence'], 'status': check_numeric(guessed_stats['intelligence'], target['intelligence'])},
-        'social_needs': {'val': guessed_stats['social_needs'], 'status': check_numeric(guessed_stats['social_needs'], target['social_needs'])},
-        'weight_max': {'val': guessed_stats['weight_max'], 'status': check_numeric(guessed_stats['weight_max'], target['weight_max'])}
-    }
-    
-    guesses = session.get('cat_guesses', [])
-    guesses.append(feedback)
-    session['cat_guesses'] = guesses
-    
-    if guessed_stats['name'] == target['name']:
-        session['cat_won'] = True
-        handle_win('cat')
-        
-    return redirect(url_for('cat'))
-
-
-@app.route('/bird')
-def bird():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    
-    initialize_game_session('bird')
-    
-    guesses = session.get('bird_guesses', [])
-    won = session.get('bird_won', False)
-    target = session.get('bird_target')
-    
-    return render_template('bird.html', guesses=reversed(guesses), won=won, target=target)
-
-
-@app.route('/bird_game', methods=['POST'])
+@app.route("/bird_game", methods=['GET', 'POST'])
 def bird_game():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-        
-    guess_name = request.form['guess'].strip()
-    
-    if 'bird_target' not in session:
-        return redirect(url_for('bird'))
-
-    target = session['bird_target']
-
-    guessed_data = build_db.query_bird(guess_name)
-    if not guessed_data:
-        flash('Bird not found!')
-        return redirect(url_for('bird'))
-
-    guessed_stats = {
-        'name': guessed_data[1],
-        'family': guessed_data[2],
-        'order': guessed_data[3],
-        'wingspan': guessed_data[5],
-        'length': guessed_data[7]
-    }
-    
-    feedback = {
-        'name': {'val': guessed_stats['name'], 'status': 'match'},
-        'family': {'val': guessed_stats['family'], 'status': 'match' if guessed_stats['family'] == target['family'] else 'no_match'},
-        'order': {'val': guessed_stats['order'], 'status': 'match' if guessed_stats['order'] == target['order'] else 'no_match'},
-        'wingspan': {'val': guessed_stats['wingspan'], 'status': check_range(guessed_stats['wingspan'], target['wingspan_min'], target['wingspan_max'])},
-        'length': {'val': guessed_stats['length'], 'status': check_numeric(guessed_stats['length'], target['length'])}
-    }
-    
-    guesses = session.get('bird_guesses', [])
-    guesses.append(feedback)
-    session['bird_guesses'] = guesses
-    
-    if guessed_stats['name'] == target['name']:
-        session['bird_won'] = True
-        handle_win('bird')
-        
-    return redirect(url_for('bird'))
+    target_pokemon = query_bird("pikachu")
+    win = False
+    if request.method == "POST":
+        guess = request.form['guess'].lower().strip()
+        stats = query_pokemon(guess)
+        print(stats)
+        print("-------------------")
+        print(target_pokemon)
+        if stats:
+            if stats[1] == target_pokemon[1]:
+                win = True
+            feedback = {
+                "name": stats[1],
+                "type_one": "match" if stats[2] == target_pokemon[2] else "no",
+                "type_two": "match" if stats[3] == target_pokemon[3] else "no",
+                "height": "match" if stats[4] == target_pokemon[4] else
+                    ("higher" if target_pokemon[4] > stats[4] else "lower"),
+                "weight": "match" if stats[5] == target_pokemon[5] else
+                    ("higher" if target_pokemon[5] > stats[5] else "lower"),
+                "generation": "match" if stats[6] == target_pokemon[6] else
+                    ("higher" if target_pokemon[6] > stats[6] else "lower")
+            }
+        else:
+            feedback = "not "
+    return render_template("poke.html", target=target_pokemon[1] if win else None, feedback=feedback, won=win,)
 
 
-@app.route('/autocomplete', methods=['GET'])
-def autocomplete():
-    game = request.args.get('game')
-    query = request.args.get('query', '').strip()
-    
-    if not game or not query:
-        return jsonify([])
-        
-    table_map = {
-        'poke': 'poke_info',
-        'cat': 'cat_info',
-        'bird': 'bird_info'
-    }
-    
-    table = table_map.get(game)
-    if not table:
-         return jsonify([])
-         
-    conn = get_db_connection()
-    c = conn.cursor()
-    # Use LIKE for prefix matching, case-insensitive logic handled by SQLite default or app logic often needed
-    # Standard SQLite LIKE is case-insensitive for ASCII
-    c.execute(f"SELECT name FROM {table} WHERE name LIKE ? LIMIT 5", (query + '%',))
-    results = [row['name'] for row in c.fetchall()]
-    conn.close()
-    
-    return jsonify(results)
 
-@app.route('/new_game/<game_type>')
-def new_game(game_type):
-    if 'username' not in session:
-        return redirect(url_for('login'))
-        
-    if game_type in ['poke', 'cat', 'bird']:
-        keys_to_reset = [
-            f'{game_type}_target', f'{game_type}_guesses', 
-            f'{game_type}_won', f'{game_type}_is_daily'
-        ]
-        for k in keys_to_reset:
-            session.pop(k, None)
-            
-    return redirect(url_for('poke' if game_type == 'poke' else 'cat' if game_type == 'cat' else 'bird'))
+#==========================================================
+#SQLITE3 DATABASE LIES ABOVE HERE
+#==========================================================
 
-if __name__ == '__main__':
+db.commit() #save changes
 
-    app.debug = True
+if __name__ == "__main__": #false if this file imported as module
+    app.debug = True  #enable PSOD, auto-server-restart on code chg
     app.run()
