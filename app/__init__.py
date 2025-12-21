@@ -5,7 +5,7 @@ import os
 import datetime
 import sys
 import random
-from build_db import query_cat, query_bird, query_pokemon
+import build_db
 import datetime
 
 app = Flask(__name__)
@@ -13,10 +13,11 @@ app.secret_key = os.urandom(24)
 
 DB_FILE="database.db"
 
-def db_connect():
-    db = sqlite3.connect(DB_FILE, check_same_thread=False)
+def get_db_connection():
+    db = sqlite3.connect(DB_FILE)
+    db.row_factory = sqlite3.Row
     return db
-#c = db.cursor()
+
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 c = db.cursor()
 c.execute('CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT)')
@@ -53,7 +54,6 @@ def get_daily_target(game_type):
     today = datetime.date.today()
     seed = today.year * 10000 + today.month * 100 + today.day
     r = random.Random(seed)
-
     table_map = {'poke': 'poke_info', 'cat': 'cat_info', 'bird': 'bird_info'}
     table = table_map[game_type]
     
@@ -71,7 +71,6 @@ def get_daily_target(game_type):
         pass
     finally:
         db.close()
-
     fallbacks = {'poke': FALLBACK_POKEMON, 'cat': FALLBACK_CATS, 'bird': FALLBACK_BIRDS}
     return r.choice(fallbacks[game_type])
 
@@ -100,7 +99,6 @@ def initialize_game_session(game_type):
         return
     
     today = datetime.date.today().isoformat()
-
     if session.get('session_day') != today:
         keys_to_reset = [
             'poke_target', 'poke_guesses', 'poke_won', 'poke_is_daily',
@@ -124,13 +122,31 @@ def initialize_game_session(game_type):
         c.execute(f'SELECT last_daily FROM {table_stats} WHERE username = ?', (user,))
         row = c.fetchone()
         db.close()
+        
+        last_daily = row['last_daily'] if row else None
+        
+        if last_daily != today:
+            session[target_key] = get_daily_target(game_type)
+            session[is_daily_key] = True
+        else:
+            session[target_key] = get_random_target(game_type)
+            session[is_daily_key] = False
+            
+        session[guesses_key] = []
+        session[won_key] = False
 
-    fallbacks = {'poke': FALLBACK_POKEMON, 'cat': FALLBACK_CATS, 'bird': FALLBACK_BIRDS}
-    return r.choice(fallbacks[game_type])
+def handle_win(game_type):
+    if not session.get(f'{game_type}_is_daily'):
+        return
+    
+    session[f'{game_type}_is_daily'] = False
 
-def get_random_target(game_type):
-    table_map = {'poke': 'poke_info', 'cat': 'cat_info', 'bird': 'bird_info'}
-    table = table_map[game_type]
+    user = session['username']
+    today = datetime.date.today()
+    today_iso = today.isoformat()
+    yesterday_iso = (today - datetime.timedelta(days=1)).isoformat()
+    
+    table_stats = {'poke': 'poke_stats', 'cat': 'cat_stats', 'bird': 'bird_stats'}[game_type]
     
     db = get_db_connection()
     c = db.cursor()
@@ -153,10 +169,6 @@ def get_random_target(game_type):
     db.commit()
     db.close()
 
-def get_db_connection():
-    db = sqlite3.connect(DB_FILE)
-    db.row_factory = sqlite3.Row
-    return db
 
 def check_numeric(guess_val, target_val):
     if guess_val == target_val:
@@ -191,53 +203,6 @@ def home():
         row = c.fetchone()
         if row:
             user_data.append((game_name, row['wins'], row['last_daily'], row['daily_streak']))
-        else:
-            user_data.append((game_name, 0, 'Never', 0))
-            
-    db.close()
-    return render_template('home.html', user=user, user_data=user_data)
-    
-def initialize_game_session(game_type):
-    if 'username' not in session:
-        return
-    
-    today = datetime.date.today().isoformat()
-
-    if session.get('session_day') != today:
-        keys_to_reset = [
-            'poke_target', 'poke_guesses', 'poke_won', 'poke_is_daily',
-            'cat_target', 'cat_guesses', 'cat_won', 'cat_is_daily',
-            'bird_target', 'bird_guesses', 'bird_won', 'bird_is_daily'
-        ]
-        for k in keys_to_reset:
-            session.pop(k, None)
-        session['session_day'] = today
-
-    target_key = f'{game_type}_target'
-    is_daily_key = f'{game_type}_is_daily'
-    won_key = f'{game_type}_won'
-    guesses_key = f'{game_type}_guesses'
-
-    if target_key not in session:
-        user = session['username']
-        user_data = (
-            ("Pokemon",) + c.execute("SELECT wins, last_daily, daily_streak FROM poke_stats WHERE username=?", (user,)).fetchone(),
-            ("Cat",) + c.execute("SELECT wins, last_daily, daily_streak FROM cat_stats WHERE username=?", (user,)).fetchone(),
-            ("Bird",) + c.execute("SELECT wins, last_daily, daily_streak FROM bird_stats WHERE username=?", (user,)).fetchone()
-        )
-        print(user_data)
-    else:
-        user_data = None
-        user = "Guest"
-
-    return render_template("home.html", user = user , user_data = user_data)
-
-@app.route("/login", methods=['GET','POST'])
-def login():
-    #if already logged in
-    if 'username' in session:
-        if request.referrer != None:
-            return redirect(request.referrer)
         else:
             user_data.append((game_name, 0, 'Never', 0))
             
@@ -489,11 +454,11 @@ def autocomplete():
     if not table:
          return jsonify([])
          
-    conn = get_db_connection()
-    c = conn.cursor()
+    db = get_db_connection()
+    c = db.cursor()
     c.execute(f"SELECT name FROM {table} WHERE name LIKE ? LIMIT 5", (query + '%',))
     results = [row['name'] for row in c.fetchall()]
-    conn.close()
+    db.close()
     
     return jsonify(results)
 
@@ -512,6 +477,7 @@ def new_game(game_type):
             
     return redirect(url_for('poke' if game_type == 'poke' else 'cat' if game_type == 'cat' else 'bird'))
 
-if __name__ == "__main__": #false if this file imported as module
-    app.debug = True  #enable PSOD, auto-server-restart on code chg
+if __name__ == '__main__':
+
+    app.debug = True
     app.run()
