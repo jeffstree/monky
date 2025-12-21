@@ -219,13 +219,25 @@ def login():
         c = db.cursor()
         c.execute('SELECT * FROM users WHERE username = ?', (username,))
         user = c.fetchone()
-        db.close()
+        
         
         if user and user['password'] == password:
             session['username'] = username
+
+            today = datetime.date.today()
+            today_iso = today.isoformat()
+            yesterday_iso = (today - datetime.timedelta(days=1)).isoformat()
+            for table_stats in ('poke_stats', 'bird_stats', 'cat_stats'):
+                row = c.execute(f'SELECT last_daily FROM {table_stats} WHERE username = ?', (username,)).fetchone()
+                if row and row['last_daily'] != yesterday_iso and row['last_daily'] != today_iso:
+                    c.execute(f'UPDATE {table_stats} SET daily_streak = 0 WHERE username = ?', (username,))
+                    db.commit()
+            db.close()
+
             return redirect(url_for('home'))
         else:
             flash('Invalid username or password')
+            db.close()
             return redirect(url_for('login'))
             
     return render_template('login.html')
