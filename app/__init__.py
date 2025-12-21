@@ -190,16 +190,13 @@ def home():
         c.execute(f'SELECT wins, last_daily, daily_streak FROM {table} WHERE username = ?', (user,))
         row = c.fetchone()
         if row:
-            return dict(row)
-    except Exception:
-        pass
-    finally:
-        db.close()
-        
-    fallbacks = {'poke': FALLBACK_POKEMON, 'cat': FALLBACK_CATS, 'bird': FALLBACK_BIRDS}
-    return random.choice(fallbacks[game_type])
-
-
+            user_data.append((game_name, row['wins'], row['last_daily'], row['daily_streak']))
+        else:
+            user_data.append((game_name, 0, 'Never', 0))
+            
+    db.close()
+    return render_template('home.html', user=user, user_data=user_data)
+    
 def initialize_game_session(game_type):
     if 'username' not in session:
         return
@@ -474,6 +471,46 @@ def bird_game():
         
     return redirect(url_for('bird'))
 
+@app.route('/autocomplete', methods=['GET'])
+def autocomplete():
+    game = request.args.get('game')
+    query = request.args.get('query', '').strip()
+    
+    if not game or not query:
+        return jsonify([])
+        
+    table_map = {
+        'poke': 'poke_info',
+        'cat': 'cat_info',
+        'bird': 'bird_info'
+    }
+    
+    table = table_map.get(game)
+    if not table:
+         return jsonify([])
+         
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute(f"SELECT name FROM {table} WHERE name LIKE ? LIMIT 5", (query + '%',))
+    results = [row['name'] for row in c.fetchall()]
+    conn.close()
+    
+    return jsonify(results)
+
+@app.route('/new_game/<game_type>')
+def new_game(game_type):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+        
+    if game_type in ['poke', 'cat', 'bird']:
+        keys_to_reset = [
+            f'{game_type}_target', f'{game_type}_guesses', 
+            f'{game_type}_won', f'{game_type}_is_daily'
+        ]
+        for k in keys_to_reset:
+            session.pop(k, None)
+            
+    return redirect(url_for('poke' if game_type == 'poke' else 'cat' if game_type == 'cat' else 'bird'))
 
 if __name__ == "__main__": #false if this file imported as module
     app.debug = True  #enable PSOD, auto-server-restart on code chg
