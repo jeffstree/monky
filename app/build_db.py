@@ -206,28 +206,37 @@ def fetch_cat_data():
 
 def fetch_poke_data():
     poke_data = []
-    for poke_num in range(1, 650):
-        pokemon_data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
-        if poke_num <= 151:
-            gen = 1
-        elif poke_num <= 251:
-            gen = 2
-        elif poke_num <= 386:
-            gen = 3
-        elif poke_num <= 493:
-            gen = 4
-        else:
-            gen = 5
-        stats = (
-            pokemon_data['id'],
-            pokemon_data['name'],
-            pokemon_data['types'][0]['type']['name'],
-            pokemon_data['types'][1]['type']['name'] if len(pokemon_data['types']) > 1 else "No Type",
-            pokemon_data['height'] / 10.0,
-            pokemon_data['weight'] / 10.0,
-            gen
-            )
-        poke_data.append(stats)
+    for poke_num in range(1, 1026):
+        if not c.execute("SELECT * FROM poke_info WHERE id = ?", (poke_num,)).fetchone():
+            pokemon_data = get_json(f"https://pokeapi.co/api/v2/pokemon/{poke_num}")
+            if poke_num <= 151:
+                gen = 1
+            elif poke_num <= 251:
+                gen = 2
+            elif poke_num <= 386:
+                gen = 3
+            elif poke_num <= 493:
+                gen = 4
+            elif poke_num <= 649:
+                gen = 5
+            elif poke_num <= 721:
+                gen = 6
+            elif poke_num <= 809:
+                gen = 7
+            elif poke_num <= 905:
+                gen = 8
+            else:
+                gen = 9
+            stats = (
+                pokemon_data['id'],
+                pokemon_data['name'],
+                pokemon_data['types'][0]['type']['name'],
+                pokemon_data['types'][1]['type']['name'] if len(pokemon_data['types']) > 1 else "No Type",
+                pokemon_data['height'] / 10.0,
+                pokemon_data['weight'] / 10.0,
+                gen
+                )
+            poke_data.append(stats)
     try:
         c.executemany("INSERT OR IGNORE INTO poke_info (id, name, type_one, type_two, height, weight, generation) VALUES (?, ?, ?, ?, ?, ?, ?)", poke_data)
         db.commit()
@@ -255,4 +264,5 @@ def query_bird(name):
     return c.fetchone()
 
 if __name__ == "__main__":
+    print("Running build_db.py")
     fetch_all()
