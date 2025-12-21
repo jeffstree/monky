@@ -104,3 +104,10 @@ jiefengO -- 2025-12-18 9:50
 
 wesleyL -- 2025-12-19 11:00
     - updated database and init  to change db creation method
+
+jiefengO --2025-12-21 3:07
+  - Fixed a bug where the bird game handled a bird's length incorrectly
+  - Fixed a bug where logging into another account wouldn't change the previous account's guesses
+  - Added generations 6 to 9 into poke_info
+  - Added cheat code to terminal
+  - Added a feature where daily streaks reset upon logging in
