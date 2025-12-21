@@ -270,7 +270,8 @@ def poke():
     guesses = session.get('poke_guesses', [])
     won = session.get('poke_won', False)
     target = session.get('poke_target')
-    
+    print("Target: " + target['name'])
+
     return render_template('poke.html', guesses=reversed(guesses), won=won, target=target)
 
 
@@ -316,7 +317,7 @@ def pokemon_game():
     if guessed_stats['name'] == target['name']:
         session['poke_won'] = True
         handle_win('poke')
-        
+
     return redirect(url_for('poke'))
 
 @app.route('/cat')
@@ -329,6 +330,7 @@ def cat():
     guesses = session.get('cat_guesses', [])
     won = session.get('cat_won', False)
     target = session.get('cat_target')
+    print("Target: " + target['name'])
     
     return render_template('cat.html', guesses=reversed(guesses), won=won, target=target)
 
@@ -389,6 +391,7 @@ def bird():
     guesses = session.get('bird_guesses', [])
     won = session.get('bird_won', False)
     target = session.get('bird_target')
+    print("Target: " + target['name'])
     
     return render_template('bird.html', guesses=reversed(guesses), won=won, target=target)
 
@@ -423,7 +426,7 @@ def bird_game():
         'family': {'val': guessed_stats['family'], 'status': 'match' if guessed_stats['family'] == target['family'] else 'no_match'},
         'order': {'val': guessed_stats['order'], 'status': 'match' if guessed_stats['order'] == target['order'] else 'no_match'},
         'wingspan': {'val': guessed_stats['wingspan'], 'status': check_range(guessed_stats['wingspan'], target['wingspan_min'], target['wingspan_max'])},
-        'length': {'val': guessed_stats['length'], 'status': check_numeric(guessed_stats['length'], target['length'])}
+        'length': {'val': guessed_stats['length'], 'status': check_range(guessed_stats['length'], target['length_min'], target['length_max'])}
     }
     
     guesses = session.get('bird_guesses', [])
@@ -433,7 +436,7 @@ def bird_game():
     if guessed_stats['name'] == target['name']:
         session['bird_won'] = True
         handle_win('bird')
-        
+    
     return redirect(url_for('bird'))
 
 @app.route('/autocomplete', methods=['GET'])
